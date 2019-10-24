@@ -6,7 +6,7 @@ import fnmatch
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import sys
-sys.path.insert(1,"C:\\Apps\\common")
+sys.path.insert(1,"C:\\Apps\\Analytics\\common")
 from analyticsEmail import sendEmail
 
 class WatchdogHandler(FileSystemEventHandler):

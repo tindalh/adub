@@ -4,7 +4,7 @@ import datetime
 import logging
 import os
 import sys
-sys.path.insert(1, 'C:\\Apps\\adimport')
+sys.path.insert(1, 'C:\\Apps\\Analytics\\adimport')
 import importers.rystadImporter as rystad
 from analyticsEmail import sendEmail
 
@@ -26,11 +26,8 @@ class Initialiser(object):
         return True
 
     def startAnalyticsHubReceiving(self):
-        server = os.environ.get('ADUB_DBServer', 'e')
-        logging.warning(server)
         analyticsHubBrokerReceiver = brkrRcvr.BrokerReceiver(
             queue='buildRefineryViews', 
-            server=server,
             database='RefineryInfo', 
             queryToRun="'sp_build_RefineryViews'",
             params="(int(body), 700)"
