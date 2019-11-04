@@ -1,5 +1,4 @@
 import pika
-import functools
 import logging
 import os
 from multiprocessing import Process
@@ -25,7 +24,7 @@ class BrokerReceiver(object):
     def callback(self, ch, method, properties, body, dataAccess):
         try:
             logging.warning("Received %r" % body)
-            #dataAccess.executeStoredProcedure(eval(self.queryToEval), eval(self.paramsToEval))
+            dataAccess.executeStoredProcedure(eval(self.queryToEval), eval(self.paramsToEval))
         except Exception as e:
             logging.error('BrokerReceiver error: {}'.format(str(e)))
             sendEmail('Error', 'Broker Receiver', str(e))
@@ -52,7 +51,7 @@ class BrokerReceiver(object):
 
             dataAccess = dtAccss.DataAccess(self.server, self.database)
 
-            self.consumer_tag = self.channel.basic_consume(queue=self.queue,on_message_callback=lambda  ch, method, properties, body: self.callback(ch, method, properties, body, dataAccess), auto_ack=False)
+            self.consumer_tag = self.channel.basic_consume(queue=self.queue,on_message_callback=lambda  ch, method, properties, body: self.callback(ch, method, properties, body, dataAccess), auto_ack=True)
             
             logging.warning(' [*] Waiting for messages. To exit press CTRL+C')
             self.channel.start_consuming()
@@ -63,4 +62,3 @@ class BrokerReceiver(object):
     def run(self):   
         self.process = Process(target=self.receive)
         self.process.start()  
-        self.process.join()

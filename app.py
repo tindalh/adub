@@ -5,5 +5,8 @@ logging.basicConfig(filename='C:\\Apps\\Analytics\\adub\\logs\\adub.log',level=l
 
 if __name__ == '__main__':
     initialiser = intlsr.Initialiser()
-    analyticsHubBrokerReceiver = initialiser.startAnalyticsHubReceiving()
-    #rystadImportSchedule = initialiser.startRystadWatcher()      
+    initialiser.startAnalyticsHubReceiving()
+    initialiser.startRystadWatcher()      
+    initialiser.startClipperFloatingStorageWatcher()     
+    initialiser.startEiaImportScheduler(); 
+
