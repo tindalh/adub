@@ -20,8 +20,9 @@ class WatchdogHandler(FileSystemEventHandler):
     #     print(event)
 
     def on_modified(self, event):
-        diff = int(time.time()) - int(self.lastModified.get(event.src_path, time.time() - 3))
-        if (os.path.isfile(event.src_path) and diff > 2):
+        diff = int(time.time()) - int(self.lastModified.get(event.src_path, time.time() - 10))
+        
+        if (os.path.isfile(event.src_path) and diff > 9):            
             while True:
                 try:
                     new_path= event.src_path + "_"
@@ -32,12 +33,12 @@ class WatchdogHandler(FileSystemEventHandler):
                 except OSError as e:
                     time.sleep(0.05)
 
-                    
-            
+            self.lastModified[event.src_path] = time.time()        
+            print("File {} {}. Running importer".format(event.src_path, event.event_type))
             logging.warning("File {} {}. Running importer".format(event.src_path, event.event_type))
+            
             try:
                 self.functionToRun(event.src_path.split('\\')[-1]) 
-                self.lastModified[event.src_path] = time.time()
             except Exception as e:
                 print(str(e))
                 logging.error('Error in import watcher: {}'.format(str(e)))
@@ -59,7 +60,7 @@ class ImportWatcher(object):
         observer.start()
         while True:
             try:
-                time.sleep(1)
+                time.sleep(0.05)
             except KeyboardInterrupt:
                 break
 
