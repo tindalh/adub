@@ -41,7 +41,6 @@ class BrokerReceiver(object):
 
     def receive(self):
         credentials = pika.PlainCredentials('adub', 'adub')
-        print(os.environ.get('ADUB_Host', 'e'))
         try:
             connection = pika.BlockingConnection(pika.ConnectionParameters(os.environ.get('ADUB_Host', 'e'),5672,'/',credentials))
             self.channel = connection.channel()

@@ -15,7 +15,6 @@ from analyticsEmail import sendEmail
 class Initialiser(object):
     def isValidEnvironment(self, process):
         if(os.environ.get('ADUB_DBServer', 'e') == 'e'):
-            print('server')
             return False
 
         if(process == 'csv'):
@@ -41,7 +40,10 @@ class Initialiser(object):
 
     def startRystadWatcher(self):
         if(not self.isValidEnvironment('csv')):
-            sendEmail('Error', 'Environment Variables', 'ADUB_DBServer, ADUB_ImportPath and ADUB_ImportPath_UNC must be defined on the machine')
+            subject = 'RystadWatcher error - Environment Variables'
+            msg = 'ADUB_DBServer, ADUB_ImportPath and ADUB_ImportPath_UNC must be defined on the machine'
+            logging.error('{}:{}'.format(subject, msg))
+            sendEmail('Error', subject, msg)
         else:
             rystadImporter = rystad.RystadImporter(
                 server=os.environ['ADUB_DBServer'], 
@@ -58,7 +60,10 @@ class Initialiser(object):
 
     def startClipperFloatingStorageWatcher(self):
         if(not self.isValidEnvironment('csv')):
-            sendEmail('Error', 'Environment Variables', 'ADUB_DBServer, ADUB_ImportPath and ADUB_ImportPath_UNC must be defined on the machine')
+            subject = 'ClipperFloatingStorageWatcher error - Environment Variables'
+            msg = 'ADUB_DBServer, ADUB_ImportPath and ADUB_ImportPath_UNC must be defined on the machine'
+            logging.error('{}:{}'.format(subject, msg))
+            sendEmail('Error', subject, msg)
         else:
             clipperFloatingStorageImporter = clipper.ClipperFloatingStorageImporter(
                 server=os.environ['ADUB_DBServer'], 
@@ -73,7 +78,10 @@ class Initialiser(object):
 
     def startEiaImportScheduler(self):
         if(not self.isValidEnvironment('scheduler')):
-            sendEmail('Error', 'Environment Variables', 'ADUB_DBServer must be defined on the machine')
+            subject = 'EiaImportScheduler error - Environment Variables'
+            msg = 'ADUB_DBServer must be defined on the machine'
+            logging.error('{}:{}'.format(subject, msg))
+            sendEmail('Error', subject, msg)
         else:
             eiaImporter = eia.EiaImporter(
                 server=os.environ['ADUB_DBServer'], 
