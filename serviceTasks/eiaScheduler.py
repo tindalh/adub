@@ -11,14 +11,18 @@ class EiaScheduler(object):
     def __init__(self, importer):
         self.importer = importer
 
-    def updateEiaSTOE(self):        
-        logging.warning("Running EIA update for STOE")
+    def updateEia(self):        
+        logging.warning("Running EIA update")
         try:
-            self.importer.runSeries('STEO.NYWSTEO.M')
-
             dataAccess = dtAccss.DataAccess(self.importer.server, self.importer.database)
-            dataAccess.executeStoredProcedure('build_mview_EIASeries', ('STEO.NYWSTEO.M',))
-            sendEmail('Info', 'Eia Scheduler', 'Short Term energy outlook data has been updated')
+            seriesToUpdate = dataAccess.load('EIASeriesShortname')
+
+            for s in seriesToUpdate:
+                print('Loading updates for {}'.format(s[1]))
+                self.importer.runSeries(s[1])
+                dataAccess.executeStoredProcedure('build_mview_EIASeries', (s[1],))
+            print('Complete')
+            sendEmail('Info', 'Eia Scheduler', 'Weekly data has been updated')
         except Exception as e:
             subject = 'Eia Scheduler Error'
             msg = 'Error: ' + str(e)
@@ -28,9 +32,7 @@ class EiaScheduler(object):
     def runSchedule(self):
         logging.warning("Scheduling job for EIA update on {} for {} database"
             .format(self.importer.server, self.importer.database))
-
-        schedule.every().wednesday.at("17:15").do(self.updateEiaSTOE)
-        #schedule.every(1).minutes.do(self.updateEiaSTOE)
+        schedule.every().wednesday.at("23:00").do(self.updateEia)
         while True:
             schedule.run_pending()
             time.sleep(1)
