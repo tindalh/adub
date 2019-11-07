@@ -9,25 +9,24 @@ from analyticsEmail import sendEmail
 
 class BrokerReceiver(object):
     """An object that listens to a RabbitMQ queue"""
-    def __init__(self, queue, database, queryToRun, params):
+    def __init__(self, queue, database, job):
         self.queue = queue
         self.server = os.environ.get('ADUB_DBServer', 'e')
         self.database = database
         self.consumer_tag = None
         self.channel = None
-        self.queryToEval = queryToRun
-        self.paramsToEval = params
+        self.job = job
         self.connection = None
         self.processes = list()
-        logging.warning('Listening to broker on {}'.format(os.environ.get('ADUB_Host', 'e')))
+        logging.warning('Listening to broker queue {} on {}'.format(self.queue, os.environ.get('ADUB_Host', 'e')))
 
-    def callback(self, ch, method, properties, body, dataAccess):
+    def callback(self, ch, method, properties, body):
         try:
             logging.warning("Received %r" % body)
-            dataAccess.executeStoredProcedure(eval(self.queryToEval), eval(self.paramsToEval))
+            self.job(body)
         except Exception as e:
-            logging.error('BrokerReceiver error: {}'.format(str(e)))
-            sendEmail('Error', 'Broker Receiver', str(e))
+            logging.error('Broker Receiver error for queue {}: {}'.format(self.queue, str(e)))
+            sendEmail('Error', 'Broker Receiver for {}'.format(self.queue), str(e))
 
     def stopConsuming(self):
         """Tell RabbitMQ that you would like to stop consuming by sending the
@@ -44,19 +43,16 @@ class BrokerReceiver(object):
         try:
             connection = pika.BlockingConnection(pika.ConnectionParameters(os.environ.get('ADUB_Host', 'e'),5672,'/',credentials))
             self.channel = connection.channel()
-        
 
             self.channel.queue_declare(queue=self.queue)
 
-            dataAccess = dtAccss.DataAccess(self.server, self.database)
-
-            self.consumer_tag = self.channel.basic_consume(queue=self.queue,on_message_callback=lambda  ch, method, properties, body: self.callback(ch, method, properties, body, dataAccess), auto_ack=True)
+            self.consumer_tag = self.channel.basic_consume(queue=self.queue,on_message_callback=lambda  ch, method, properties, body: self.callback(ch, method, properties, body), auto_ack=True)
             
             logging.warning(' [*] Waiting for messages. To exit press CTRL+C')
             self.channel.start_consuming()
         except Exception as e:
-            logging.error('BrokerReceiver error: {}'.format(str(e)))
-            sendEmail('Error', 'Broker Receiver', str(e))
+            logging.error('Broker Receiver error for queue {}: {}'.format(self.queue, str(e)))
+            sendEmail('Error', 'Broker Receiver for {}'.format(self.queue), str(e))
 
     def run(self):   
         self.process = Process(target=self.receive)

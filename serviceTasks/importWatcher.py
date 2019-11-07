@@ -21,7 +21,7 @@ class WatchdogHandler(FileSystemEventHandler):
 
     def on_modified(self, event):
         diff = int(time.time()) - int(self.lastModified.get(event.src_path, time.time() - 10))
-        
+        print(diff)
         if (os.path.isfile(event.src_path) and diff > 9):            
             while True:
                 try:
@@ -41,8 +41,8 @@ class WatchdogHandler(FileSystemEventHandler):
                 self.functionToRun(event.src_path.split('\\')[-1]) 
             except Exception as e:
                 print(str(e))
-                logging.error('Error in import watcher: {}'.format(str(e)))
-                sendEmail('Error', 'import watcher', str(e))
+                # logging.error('Error in import watcher: {}'.format(str(e)))
+                # sendEmail('Error', 'import watcher', str(e))
 
 class ImportWatcher(object):
     def __init__(self, importer, name):
