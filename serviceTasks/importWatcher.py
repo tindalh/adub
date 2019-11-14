@@ -41,8 +41,8 @@ class WatchdogHandler(FileSystemEventHandler):
                 self.functionToRun(event.src_path.split('\\')[-1]) 
             except Exception as e:
                 print(str(e))
-                # logging.error('Error in import watcher: {}'.format(str(e)))
-                # sendEmail('Error', 'import watcher', str(e))
+                logging.error('Error in import watcher: {}'.format(str(e)))
+                sendEmail('Error', 'import watcher', str(e))
 
 class ImportWatcher(object):
     def __init__(self, importer, name):
