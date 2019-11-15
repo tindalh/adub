@@ -9,6 +9,7 @@ from watchdog.events import FileSystemEventHandler
 import sys
 sys.path.insert(1,"C:\\Apps\\Analytics\\common")
 from analyticsEmail import sendEmail
+from log import log
 
 class WatchdogHandler(FileSystemEventHandler):
     def __init__(self, functionToRun):
@@ -21,7 +22,7 @@ class WatchdogHandler(FileSystemEventHandler):
 
     def on_modified(self, event):
         diff = int(time.time()) - int(self.lastModified.get(event.src_path, time.time() - 10))
-        print(diff)
+        
         if (os.path.isfile(event.src_path) and diff > 9):            
             while True:
                 try:
@@ -33,39 +34,31 @@ class WatchdogHandler(FileSystemEventHandler):
                 except OSError as e:
                     time.sleep(0.05)
 
-            self.lastModified[event.src_path] = time.time()        
-            print("File {} {}. Running importer".format(event.src_path, event.event_type))
-            logging.warning("File {} {}. Running importer".format(event.src_path, event.event_type))
+            self.lastModified[event.src_path] = time.time()   
+            log(__name__, 'on_modified', f"Running importer for {event.src_path}") 
             
             try:
-                self.functionToRun(event.src_path.split('\\')[-1]) 
+                self.functionToRun(event.src_path) 
             except Exception as e:
-                print(str(e))
-                logging.error('Error in import watcher: {}'.format(str(e)))
-                sendEmail('Error', 'import watcher', str(e))
+                log(__name__, 'on_modified', f"Error: {str(e)}", 'Error', True, 'ImportWatcher')
 
-class ImportWatcher(object):
-    def __init__(self, importer, name):
-        self.importer = importer
-        self.name = name
-
-    def startDirectoryWatch(self):
-
-        logging.warning("Scheduling job for {} on {} for {} database. Input file name: {}"
-            .format(self.name, self.importer.server, self.importer.database, self.importer.rawDataFilePath))
-
-        event_handler = WatchdogHandler(self.importer.run)
-        observer = Observer()
-        observer.schedule(event_handler, path=self.importer.rawDataFilePath, recursive=False)
-        observer.start()
-        while True:
-            try:
-                time.sleep(0.05)
-            except KeyboardInterrupt:
-                break
+def startDirectoryWatch(name, importerFunc, file_path):
+    log(__name__, 'startDirectoryWatch', f"Scheduling {name}")
+    
+    event_handler = WatchdogHandler(importerFunc)
+    observer = Observer()
+    observer.schedule(event_handler, path=file_path, recursive=False)
+    observer.start()
+    while True:
+        try:
+            time.sleep(0.05)
+        except KeyboardInterrupt:
+            break
 
 
-    def watch(self):   
-        self.process = Process(target=self.startDirectoryWatch)
-        self.process.start()  
+def watch(name, importerFunc, file_path):   
+    process = Process(target=startDirectoryWatch, args=(name, importerFunc, file_path))
+    process.start() 
+
+    
         
