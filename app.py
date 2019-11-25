@@ -5,8 +5,8 @@ logging.basicConfig(filename='C:\\Apps\\Analytics\\adub\\logs\\adub.log',level=l
 
 if __name__ == '__main__':
     initialiser = intlsr.Initialiser()
-    initialiser.startRefineryInfoFranchisingBrokerReceiving()
+    #initialiser.startRefineryInfoFranchisingBrokerReceiving()
     initialiser.startRystadWatcher()      
     initialiser.startClipperFloatingStorageWatcher()     
-    initialiser.startEIAUpdateBrokerReceiving(); 
-    initialiser.startEiaImportScheduler()
+    #initialiser.startEIAUpdateBrokerReceiving(); 
+    #initialiser.startEiaImportScheduler()

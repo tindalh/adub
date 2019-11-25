@@ -94,13 +94,11 @@ class Initialiser(object):
 
     def startRystadWatcher(self):
         if(self.isValidEnvironment('csv')):
-            rystadWatcher = wtchr.ImportWatcher(self.rystadImporter, 'Rystad Production')
-            rystadWatcher.watch()
+            wtchr.watch('Rystad Production', self.rystadImporter.run, self.rystadImporter.rawDataFilePath)  
 
     def startClipperFloatingStorageWatcher(self):
-        if(self.isValidEnvironment('csv')):            
-            clipperFloatingStorageWathcer = wtchr.ImportWatcher(self.clipperFloatingStorageImporter, 'Clipper Floating Storage')
-            clipperFloatingStorageWathcer.watch()  
+        if(self.isValidEnvironment('csv')): 
+            wtchr.watch('Clipper Floating Storage', self.clipperFloatingStorageImporter.run, self.clipperFloatingStorageImporter.rawDataFilePath)  
 
     def startEiaImportScheduler(self):
         if(self.isValidEnvironment('Eia Import Scheduler')):            
