@@ -3,9 +3,8 @@ import logging
 import os
 from multiprocessing import Process
 import sys
-sys.path.insert(1, 'C:\\Apps\\Analytics\\common')
-import dataAccess as dtAccss
-from analyticsEmail import sendEmail
+import helpers.dataAccess as dtAccss
+from helpers.log import log
 
 class BrokerReceiver(object):
     """An object that listens to a RabbitMQ queue"""
@@ -18,22 +17,20 @@ class BrokerReceiver(object):
         self.job = job
         self.connection = None
         self.processes = list()
-        logging.warning('Listening to broker queue {} on {}'.format(self.queue, os.environ.get('ADUB_Host', 'e')))
+        log(__name__, '__init__', f"Listening to broker queue {self.queue} on {os.environ.get('ADUB_Host', 'e')}")
 
     def callback(self, ch, method, properties, body):
         try:
-            logging.warning("Received %r" % body)
+            log(__name__, 'callback', f"{self.queue} received {body}")
             self.job(body)
         except Exception as e:
-            logging.error('Broker Receiver error for queue {}: {}'.format(self.queue, str(e)))
-            sendEmail('Error', 'Broker Receiver for {}'.format(self.queue), str(e))
+            log(__name__, 'callback', f"Broker Receiver error for queue {self.queue}: {str(e)}", 'Error', True, 'Import Watcher')
 
     def stopConsuming(self):
         """Tell RabbitMQ that you would like to stop consuming by sending the
         Basic.Cancel RPC command.
         """
         if self.channel:
-            logging.warning('Sending a Basic.Cancel RPC command to RabbitMQ')
             
             self.channel.add_on_cancel_callback(self.on_cancelok)
             self.channel.basic_cancel(self.consumer_tag)
@@ -48,11 +45,10 @@ class BrokerReceiver(object):
 
             self.consumer_tag = self.channel.basic_consume(queue=self.queue,on_message_callback=lambda  ch, method, properties, body: self.callback(ch, method, properties, body), auto_ack=True)
             
-            logging.warning(' [*] Waiting for messages. To exit press CTRL+C')
+            log(__name__, 'receive', f"[*] Waiting for messages on {self.queue}")
             self.channel.start_consuming()
         except Exception as e:
-            logging.error('Broker Receiver error for queue {}: {}'.format(self.queue, str(e)))
-            sendEmail('Error', 'Broker Receiver for {}'.format(self.queue), str(e))
+            log(__name__, 'receive', f"Broker Receiver error for queue {self.queue}: {str(e)}", 'Error', True, 'Import Watcher')
 
     def run(self):   
         self.process = Process(target=self.receive)
