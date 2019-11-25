@@ -1,0 +1,2 @@
+AUSTRALIA       CRUDE           JAN2005                     436.58
+AUSTRALIA       CRUDE           FEB2005                     390.3580 

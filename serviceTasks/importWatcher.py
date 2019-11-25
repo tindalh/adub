@@ -6,9 +6,7 @@ import os
 import fnmatch
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-import sys
-sys.path.insert(1,"C:\\Apps\\Analytics\\common")
-from log import log
+from helpers.log import log
 
 def watch(name, importerFunc, file_path):  
     """

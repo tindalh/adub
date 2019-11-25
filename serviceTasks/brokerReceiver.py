@@ -3,9 +3,8 @@ import logging
 import os
 from multiprocessing import Process
 import sys
-sys.path.insert(1, 'C:\\Apps\\Analytics\\common')
-import dataAccess as dtAccss
-from log import log
+import helpers.dataAccess as dtAccss
+from helpers.log import log
 
 class BrokerReceiver(object):
     """An object that listens to a RabbitMQ queue"""
@@ -32,7 +31,6 @@ class BrokerReceiver(object):
         Basic.Cancel RPC command.
         """
         if self.channel:
-            logging.warning('Sending a Basic.Cancel RPC command to RabbitMQ')
             
             self.channel.add_on_cancel_callback(self.on_cancelok)
             self.channel.basic_cancel(self.consumer_tag)
@@ -47,7 +45,7 @@ class BrokerReceiver(object):
 
             self.consumer_tag = self.channel.basic_consume(queue=self.queue,on_message_callback=lambda  ch, method, properties, body: self.callback(ch, method, properties, body), auto_ack=True)
             
-            logging.warning(' [*] Waiting for messages. To exit press CTRL+C')
+            log(__name__, 'receive', f"[*] Waiting for messages on {self.queue}")
             self.channel.start_consuming()
         except Exception as e:
             log(__name__, 'receive', f"Broker Receiver error for queue {self.queue}: {str(e)}", 'Error', True, 'Import Watcher')

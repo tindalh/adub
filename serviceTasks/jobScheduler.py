@@ -3,9 +3,8 @@ import time
 import sys
 import logging
 from multiprocessing import Process
-sys.path.insert(1, 'C:\\Apps\\Analytics\\common')
-import dataAccess as dtAccss
-from log import log
+import helpers.dataAccess as dtAccss
+from helpers.log import log
 
 class JobScheduler(object):
     def __init__(self, name, scheduler):

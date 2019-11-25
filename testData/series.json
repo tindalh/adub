@@ -1,0 +1,18 @@
+{
+    "series": [
+        {
+            "series_id": "ELEC.GEN.ALL-PCN-1.Q",
+             "name": "Net generation : all fuels : Pacific Noncontiguous (total) : electric utility : quarterly", 
+             "units": "thousand megawatthours", 
+             "f": "Q", 
+             "description": "Summation of all fuels used for electricity generation; Power plants owned by regulated electric utilties; Summation of the states in the Pacific Noncontiguous census region including Alaska and Hawaii.; ", 
+             "copyright": "None", 
+             "source": "EIA, U.S. Energy Information Administration", 
+             "geography": "USA-AK+USA-HI", 
+             "start": "2001Q1", 
+             "end": "2019Q2", 
+             "updated": "2019-10-23T18:58:10-0400", 
+             "data": [["2019Q2", 2571.13886], ["2019Q1", 2745.57906]]
+        }
+    ]
+}
