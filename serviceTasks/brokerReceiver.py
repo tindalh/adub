@@ -5,7 +5,7 @@ from multiprocessing import Process
 import sys
 sys.path.insert(1, 'C:\\Apps\\Analytics\\common')
 import dataAccess as dtAccss
-from analyticsEmail import sendEmail
+from log import log
 
 class BrokerReceiver(object):
     """An object that listens to a RabbitMQ queue"""
@@ -18,15 +18,14 @@ class BrokerReceiver(object):
         self.job = job
         self.connection = None
         self.processes = list()
-        logging.warning('Listening to broker queue {} on {}'.format(self.queue, os.environ.get('ADUB_Host', 'e')))
+        log(__name__, '__init__', f"Listening to broker queue {self.queue} on {os.environ.get('ADUB_Host', 'e')}")
 
     def callback(self, ch, method, properties, body):
         try:
-            logging.warning("Received %r" % body)
+            log(__name__, 'callback', f"{self.queue} received {body}")
             self.job(body)
         except Exception as e:
-            logging.error('Broker Receiver error for queue {}: {}'.format(self.queue, str(e)))
-            sendEmail('Error', 'Broker Receiver for {}'.format(self.queue), str(e))
+            log(__name__, 'callback', f"Broker Receiver error for queue {self.queue}: {str(e)}", 'Error', True, 'Import Watcher')
 
     def stopConsuming(self):
         """Tell RabbitMQ that you would like to stop consuming by sending the
@@ -51,8 +50,7 @@ class BrokerReceiver(object):
             logging.warning(' [*] Waiting for messages. To exit press CTRL+C')
             self.channel.start_consuming()
         except Exception as e:
-            logging.error('Broker Receiver error for queue {}: {}'.format(self.queue, str(e)))
-            sendEmail('Error', 'Broker Receiver for {}'.format(self.queue), str(e))
+            log(__name__, 'receive', f"Broker Receiver error for queue {self.queue}: {str(e)}", 'Error', True, 'Import Watcher')
 
     def run(self):   
         self.process = Process(target=self.receive)
