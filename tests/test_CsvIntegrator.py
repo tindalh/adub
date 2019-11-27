@@ -50,7 +50,7 @@ class TestCsvIntegrator(unittest.TestCase):
     
     # python -m unittest test_CsvIntegrator.TestCsvIntegrator.test_run
     def test_run(self):
-        self.ieaIntegrator.run(os.path.join(self.ieaIntegrator.file_path, 'SUPPLY.txt'))
+        self.ieaIntegrator.run(os.path.join(self.ieaIntegrator.file_path, 'Summary.txt'))
 
     # python -m unittest test_CsvIntegrator.TestCsvIntegrator.test_run_rystad
     def test_run_rystad(self):            

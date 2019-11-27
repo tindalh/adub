@@ -1,7 +1,7 @@
 import importers.eiaImporter as eia
 import sys
 import argparse
-import dataAccess as dtAccss
+import helpers.dataAccess as dtAccss
 import os
 
 # python app.py -w "eia" -s "LON-PC53" -i 714755 -c "C:\Dev\Excel Files\Output\EIA" -b  "C:\Dev\Excel Files\Output\EIA"

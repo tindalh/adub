@@ -5,6 +5,7 @@ sys.path.append("..")
 import helpers.dataAccess as dtAccss
 import helpers.csvHelper as csvHelper
 from helpers.log import log
+import pandas as pd
 from multiprocessing import Process
 import os
 
@@ -50,7 +51,14 @@ class CsvIntegrator(object):
                     log(__name__, 'run', f"No config saved for {self.name}", level="Error", email=True, emailSubject=f"{self.name}")
                 
             
-            df = csvHelper.getDataframe(modified_file, self.delimiter) 
+            if('xls' in modified_file_name.split('\\')[-1]):
+                data_xls = pd.read_excel(modified_file, 'Sheet1', index_col=None)
+                data_xls.to_csv('your_csv.csv', encoding='utf-8')
+                df = csvHelper.getDataframe('your_csv.csv', self.delimiter) 
+            else:
+                df = csvHelper.getDataframe(modified_file, self.delimiter) 
+
+            
             
             if(self.table_name is None):
                 table_columns = self.__getDatabaseColumnNames__(table_name) 
@@ -88,7 +96,7 @@ class CsvIntegrator(object):
         else:
             dataframe_columns = list()
             for column in columns:
-                dataframe_columns.append(column)
+                dataframe_columns.append(column.ColumnName)
 
             df.columns = dataframe_columns
         
