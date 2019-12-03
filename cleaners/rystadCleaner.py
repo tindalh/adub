@@ -46,8 +46,7 @@ def __arrangeColumns__(df):
     df = df.drop(['Year', 'Month', '[Data Values]'], axis=1)
     new_col=['' for x in df.index]
     df.insert(0, 'Id', new_col)
-
     cols = df.columns
     cols = [cols[2], cols[3],
-         cols[1], cols[11], cols[7], cols[4], cols[5], cols[10]]
+         cols[1], cols[11], cols[6], cols[4], cols[5], cols[10]]
     return df[cols]

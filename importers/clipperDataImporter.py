@@ -8,13 +8,15 @@ import helpers.dataAccess as dtAccss
 
 
 class ClipperDataImporter(object):
-    def __init__(self, isTest=True):
+    def __init__(self, url, user, password, output_file_path, table_name, server, database):
         self.url = "http://appserver.clipperdata.com:8080/ClipperDataAPI-2/rest/clipperapi/data/"
         self.user = "targo.support@arcpet.co.uk"
         self.password = "arcsupport212"
+        self.server = server,
+        self.database = database
+        self.table_name = table_name
         self.maxId = 0
-        self.isTest = isTest
-        self.csv_file_path = "C:\Dev\Excel Files\Output\ClipperData"
+        self.output_file_path = output_file_path
 
     def truncateCSV(self, file_path):
         f = open(file_path, "w+")

@@ -9,7 +9,7 @@ import sys
 import schedule
 import franchisers.refineryInfoFranchiser as refineryInfoFrnchsr
 import integrators.csvIntegrator as csvIntgrtr
-from cleaners.ieaCleaner import clean as cleanIea
+from cleaners.ieaTxtCleaner import clean as cleanIeaTxt
 from cleaners.rystadCleaner import clean as rystadCleaner
 from cleaners.clipperFloatingStorageCleaner import clean as clipperFloatingStorageCleaner
 import importers.eiaImporter as eiaImprtr
@@ -26,21 +26,220 @@ class Initialiser(object):
             file_path="{}\\EIA".format(os.environ['ADUB_Import_Output_UNC']),
             bulkinsert_path="{}\\EIA".format(os.environ['ADUB_Import_Output'])
         )
-        self.ieaIntegrator = csvIntgrtr.CsvIntegrator(
-            name='IEA Integrator',
+     
+        self.refineryInfoFranchiser = refineryInfoFrnchsr.RefineryInfoFranchiser(
+            os.environ['ADUB_DBServer'], 'RefineryInfo'
+        )
+
+        self.ieaSupplyIntegrator = csvIntgrtr.CsvIntegrator(
+            name='IEA Supply',
             server=os.environ['ADUB_DBServer'],
             database='IEAData',
+            table_name='supply',
+            file_columns=['Country','Product','Period','Quantity'],
+            table_columns=['Country','Product','Period','PeriodType','Quantity','Asof'],
+            file_name='SUPPLY.TXT',
             file_path="{}\\IEA".format(os.environ['ADUB_Import_Path']), 
             output_file_path="{}\\IEA\\".format(os.environ['ADUB_Import_Output_UNC']), 
-            clean = cleanIea,
-            delimiter='\s+'
+            clean = cleanIeaTxt,
+            delimiter='\s+',
+            truncate=False,
+            column_for_delete='Asof',
+        )
+
+        self.ieaStockdatIntegrator = csvIntgrtr.CsvIntegrator(
+            name='IEA Stock Data',
+            server=os.environ['ADUB_DBServer'],
+            database='IEAData',
+            table_name='stockdat',
+            file_columns=['Stock','Country','Product','Period','Quantity'],
+            table_columns=['Stock','Country','Product','Period','PeriodType','Quantity','Asof'],
+            file_name='stockdat.TXT',
+            file_path="{}\\IEA".format(os.environ['ADUB_Import_Path']), 
+            output_file_path="{}\\IEA\\".format(os.environ['ADUB_Import_Output_UNC']), 
+            clean = cleanIeaTxt,
+            delimiter='\s+',
+            truncate=False,
+            column_for_delete='Asof',
+        )
+
+        self.ieaSplitdatIntegrator = csvIntgrtr.CsvIntegrator(
+            name='IEA Split Data',
+            server=os.environ['ADUB_DBServer'],
+            database='IEAData',
+            table_name='splitdat',
+            file_columns=['Product','Country','Balance','Period','Quantity'],
+            table_columns=['Product','Country','Balance','Period','PeriodType','Quantity','Asof'],
+            file_name='splitdat.TXT',
+            file_path="{}\\IEA".format(os.environ['ADUB_Import_Path']), 
+            output_file_path="{}\\IEA\\".format(os.environ['ADUB_Import_Output_UNC']), 
+            clean = cleanIeaTxt,
+            delimiter='\s+',
+            truncate=False,
+            column_for_delete='Asof',
+        )
+
+        self.ieaSummaryIntegrator = csvIntgrtr.CsvIntegrator(
+            name='IEA Summary',
+            server=os.environ['ADUB_DBServer'],
+            database='IEAData',
+            table_name='Summary',
+            file_columns=['Geography','Final','Period','Quantity'],
+            table_columns=['Geography','Final','Period','PeriodType','Quantity','Asof'],
+            file_name='Summary.TXT',
+            file_path="{}\\IEA".format(os.environ['ADUB_Import_Path']), 
+            output_file_path="{}\\IEA\\".format(os.environ['ADUB_Import_Output_UNC']), 
+            clean = cleanIeaTxt,
+            delimiter='\s+',
+            truncate=False,
+            column_for_delete='Asof',
+        )
+
+        self.ieaNOECDDEIntegrator = csvIntgrtr.CsvIntegrator(
+            name='IEA NOECDDE',
+            server=os.environ['ADUB_DBServer'],
+            database='IEAData',
+            table_name='NOECDDE',
+            file_columns=['Country','Period','Quantity'],
+            table_columns=['Country','Period','PeriodType','Quantity','Asof'],
+            file_name='NOECDDE.TXT',
+            file_path="{}\\IEA".format(os.environ['ADUB_Import_Path']), 
+            output_file_path="{}\\IEA\\".format(os.environ['ADUB_Import_Output_UNC']), 
+            clean = cleanIeaTxt,
+            delimiter='\s+',
+            truncate=False,
+            column_for_delete='Asof',
+        )
+
+        self.ieaOECDDEIntegrator = csvIntgrtr.CsvIntegrator(
+            name='IEA OECDDE',
+            server=os.environ['ADUB_DBServer'],
+            database='IEAData',
+            table_name='OECDDE',
+            file_columns=['Country','PRODUCT','Period','Quantity'],
+            table_columns=['Country','Product','Period','PeriodType','Quantity','Asof'],
+            file_name='OECDDE.TXT',
+            file_path="{}\\IEA".format(os.environ['ADUB_Import_Path']), 
+            output_file_path="{}\\IEA\\".format(os.environ['ADUB_Import_Output_UNC']), 
+            clean = cleanIeaTxt,
+            delimiter='\s+',
+            truncate=False,
+            column_for_delete='Asof',
+        )
+
+        self.ieaCrudeDataIntegrator = csvIntgrtr.CsvIntegrator(
+            name='IEA Crude Data',
+            server=os.environ['ADUB_DBServer'],
+            database='IEAData',
+            table_name='CRUDEDAT',
+            file_columns=['COUNTRY','PRODUCT','BALANCE','Period','Quantity'],
+            table_columns=['Country','Product','Balance','Period','PeriodType','Quantity','Asof'],
+            file_name='CRUDEDAT.TXT',
+            file_path="{}\\IEA".format(os.environ['ADUB_Import_Path']), 
+            output_file_path="{}\\IEA\\".format(os.environ['ADUB_Import_Output_UNC']), 
+            clean = cleanIeaTxt,
+            delimiter='\s+',
+            truncate=False,
+            column_for_delete='Asof',
+        )
+
+        self.ieaExportDataIntegrator = csvIntgrtr.CsvIntegrator(
+            name='IEA Export Data',
+            server=os.environ['ADUB_DBServer'],
+            database='IEAData',
+            table_name='ExportDAT',
+            file_columns=['COUNTRY','PRODUCT','Export Country','Period','Quantity'],
+            table_columns=['Country','Product','Export Country','Period','PeriodType','Quantity','Asof'],
+            file_name='EXPORTDAT.TXT',
+            file_path="{}\\IEA".format(os.environ['ADUB_Import_Path']), 
+            output_file_path="{}\\IEA\\".format(os.environ['ADUB_Import_Output_UNC']), 
+            clean = cleanIeaTxt,
+            delimiter='\s+',
+            truncate=False,
+            column_for_delete='Asof',
+        )
+
+        self.ieaImportDataIntegrator = csvIntgrtr.CsvIntegrator(
+            name='IEA Import Data',
+            server=os.environ['ADUB_DBServer'],
+            database='IEAData',
+            table_name='ImportDAT',
+            file_columns=['COUNTRY','PRODUCT','Import Country','Period','Quantity'],
+            table_columns=['Country','Product','Import Country','Period','PeriodType','Quantity','Asof'],
+            file_name='ImPORTDAT.TXT',
+            file_path="{}\\IEA".format(os.environ['ADUB_Import_Path']), 
+            output_file_path="{}\\IEA\\".format(os.environ['ADUB_Import_Output_UNC']), 
+            clean = cleanIeaTxt,
+            delimiter='\s+',
+            truncate=False,
+            column_for_delete='Asof',
+        )
+
+        self.ieaProdDataIntegrator = csvIntgrtr.CsvIntegrator(
+            name='IEA Prod Data',
+            server=os.environ['ADUB_DBServer'],
+            database='IEAData',
+            table_name='ProdDAT',
+            file_columns=['PRODUCT','COUNTRY','BALANCE','Period','Quantity'],
+            table_columns=['Product','Country','Balance','Period','PeriodType','Quantity','Asof'],
+            file_name='PRODDAT.TXT',
+            file_path="{}\\IEA".format(os.environ['ADUB_Import_Path']), 
+            output_file_path="{}\\IEA\\".format(os.environ['ADUB_Import_Output_UNC']), 
+            clean = cleanIeaTxt,
+            delimiter='\s+',
+            truncate=False,
+            column_for_delete='Asof',
+        )
+
+
+        self.ieaFieldIntegrator = csvIntgrtr.CsvIntegrator(
+            name='IEA Fields',
+            server=os.environ['ADUB_DBServer'],
+            database='IEAData',
+            table_name='field_by_field',
+            file_columns=['FIELD', 'COUNTRY','PRODUCT','ENVIRONMENT','TIME','FREQUENCY','TIMESTAMP','VALUE'],
+            table_columns=['Field','Country','Product','Environment','Period','PeriodType','Value','Asof'],
+            file_name='field_by_field.csv',
+            file_path="{}\\IEA".format(os.environ['ADUB_Import_Path']), 
+            output_file_path="{}\\IEA\\".format(os.environ['ADUB_Import_Output_UNC']), 
+            clean = cleanIeaTxt,
+            delimiter=',',
+            truncate=False,
+            column_for_delete='Asof',
+        )
+
+        self.ieaCountryDetailsIntegrator = csvIntgrtr.CsvIntegrator(
+            name='IEA Country Details',
+            server=os.environ['ADUB_DBServer'],
+            database='IEAData',
+            table_name='country_details',
+            table_columns=['COUNTRY_CODE','COUNTRY_NAME','ISO_ALPHA_2','ISO_ALPHA_3'],
+            file_name='country_details.csv',
+            file_path="{}\\IEA".format(os.environ['ADUB_Import_Path']), 
+            output_file_path="{}\\IEA\\".format(os.environ['ADUB_Import_Output_UNC']), 
+            delimiter=',',
+            truncate=True
+        )
+
+        self.ieaFieldDetailsIntegrator = csvIntgrtr.CsvIntegrator(
+            name='IEA Field Details',
+            server=os.environ['ADUB_DBServer'],
+            database='IEAData',
+            table_name='field_details',
+            table_columns=['FIELD_CODE','FIELD_NAME','COUNTRY','GROUP_CODE','GROUP_NAME','PRODUCT','ENVIRONMENT'],
+            file_name='field_details.csv',
+            file_path="{}\\IEA".format(os.environ['ADUB_Import_Path']), 
+            output_file_path="{}\\IEA\\".format(os.environ['ADUB_Import_Output_UNC']), 
+            delimiter=',',
+            truncate=True
         )
 
         self.rystadIntegrator = csvIntgrtr.CsvIntegrator(
-            name='Rystad Integrator',
+            name='Rystad Production',
             server=os.environ['ADUB_DBServer'],
             database='Analytics',
             table_name='yview_RystadProduction',
+            table_columns=['Country','Category','Grade','Period','Production','SulphurGroup','SulphurDetail','CleanSulphurDetail'],
             file_path="{}\\RystadProduction".format(os.environ['ADUB_Import_Path']), 
             output_file_path="{}\\RystadProduction\\".format(os.environ['ADUB_Import_Output_UNC']), 
             truncate=False,
@@ -50,7 +249,7 @@ class Initialiser(object):
         )
 
         self.clipperFloatingStorageIntegrator = csvIntgrtr.CsvIntegrator(
-            name='Clipper Floating Storage Integrator',
+            name='Clipper Floating Storage',
             server=os.environ['ADUB_DBServer'],
             database='STG_Targo',
             table_name='yview_ClipperFloatingStorage',
@@ -61,9 +260,6 @@ class Initialiser(object):
             clean = clipperFloatingStorageCleaner,
             clean_arg='2015-01-01',
             delimiter=','
-        )
-        self.refineryInfoFranchiser = refineryInfoFrnchsr.RefineryInfoFranchiser(
-            os.environ['ADUB_DBServer'], 'RefineryInfo'
         )
         
 
@@ -86,13 +282,25 @@ class Initialiser(object):
         eiaUpdateBrokerReceiver.run()
 
     def startRystadWatcher(self):
-        wtchr.watch('Rystad Production', self.rystadIntegrator.run, self.rystadIntegrator.file_path)
+        wtchr.watch('Rystad Production', self.rystadIntegrator)
 
-    def startIeaWatcher(self):
-        wtchr.watch('IEA Data', self.ieaIntegrator.run, self.ieaIntegrator.file_path)
+    def startIeaWatchers(self):
+        wtchr.watch('IEA Supply', self.ieaSupplyIntegrator)
+        wtchr.watch('IEA Stock Data', self.ieaStockdatIntegrator)
+        wtchr.watch('IEA Split Data', self.ieaSplitdatIntegrator)
+        wtchr.watch('IEA Summary', self.ieaSummaryIntegrator)
+        wtchr.watch('IEA NOECDDE', self.ieaNOECDDEIntegrator)
+        wtchr.watch('IEA OECDDE', self.ieaOECDDEIntegrator)
+        wtchr.watch('IEA Crude Data', self.ieaCrudeDataIntegrator)
+        wtchr.watch('IEA Export Data', self.ieaExportDataIntegrator)
+        wtchr.watch('IEA Import Data', self.ieaImportDataIntegrator)
+        wtchr.watch('IEA Prod Data', self.ieaProdDataIntegrator)
+        wtchr.watch('IEA Fields', self.ieaFieldIntegrator)
+        wtchr.watch('IEA Country Details', self.ieaCountryDetailsIntegrator)
+        wtchr.watch('IEA Field Details', self.ieaFieldDetailsIntegrator)
 
     def startClipperFloatingStorageWatcher(self):
-        wtchr.watch('Clipper Floating Storage', self.clipperFloatingStorageIntegrator.run, self.clipperFloatingStorageIntegrator.file_path)
+        wtchr.watch('Clipper Floating Storage', self.clipperFloatingStorageIntegrator)
 
     def startEiaImportScheduler(self):
         #scheduler = schedule.every().minutes.do(self.eiaImporter.runSeries).scheduler

@@ -1,4 +1,5 @@
 import logging
+
 import helpers.analyticsEmail as analyticsEmail
 
 logging.basicConfig(filename='C:\\Apps\\Analytics\\adub\\logs\\adub.log',level=logging.INFO,format='%(asctime)s %(message)s')

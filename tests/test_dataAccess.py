@@ -1,7 +1,7 @@
 import unittest
 import sys
 sys.path.append("..")
-from dataAccess import DataAccess
+from helpers.dataAccess import DataAccess
 
 class TestDataAccess(unittest.TestCase):
     def setUp(self):
@@ -23,10 +23,6 @@ class TestDataAccess(unittest.TestCase):
         dataAccess = DataAccess(self.server, 'Analytics')
         self.assertIsNone(dataAccess.deleteById('RystadProduction', "Period", "'2019-02-01'" ))
 
-    # python -m unittest test_dataAccess.TestDataAccess.test_bulkInsert_withDelete
-    def test_bulkInsert_withDelete(self):
-        dataAccess = DataAccess(self.server, 'Analytics')
-        self.assertIsNone(dataAccess.bulkInsert('bview_RystadProduction', "C:\Dev\Excel Files\Output\RystadProduction\Rystad Production_2013.csv", truncate=False, Period="2019-01-01" ))
 
     # python -m unittest test_dataAccess.TestDataAccess.test_load
     def test_load(self):

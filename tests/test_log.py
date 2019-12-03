@@ -1,7 +1,7 @@
 import unittest
 import sys
 sys.path.append("..")
-from log import log
+from helpers.log import log
 
 class TestLog(unittest.TestCase):
 

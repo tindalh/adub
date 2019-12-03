@@ -10,25 +10,29 @@ from multiprocessing import Process
 import os
 
 class CsvIntegrator(object):
-    def __init__(self, name, server, database, 
-                    file_path, output_file_path, clean=None, table_name=None, 
+    def __init__(self, name, server, database, file_path, output_file_path, table_name, 
+                    file_name=None, file_columns=None, table_columns=None, clean=None, 
                         truncate=True, column_for_delete = None, clean_arg= None, delimiter=None):
-        self.name = name
-        self.server = server
-        self.database = database
-        self.file_path = file_path
-        self.output_file_path = output_file_path
-        self.table_name = table_name
-        self.truncate = truncate
-        self.clean = clean
-        self.column_for_delete = column_for_delete
+        self.name = name # Name for this integrator, to appear in logs and emails
+        self.server = server # Server name
+        self.database = database 
+        self.table_name = table_name # Table where the data will be inserted
+        self.file_path = file_path # Path where the input file is         
+        self.output_file_path = output_file_path # Path for the output file 
+        
+        self.file_name = file_name # [OPTIONAL] name of file. If blank, any file names in the path will be processed        
+        self.file_columns = file_columns # [OPTIONAL] column headers for the file
+        self.table_columns = table_columns # [OPTIONAL] table columns
+        self.truncate = truncate # [OPTIONAL] column headers for the file. Default True
+        self.clean = clean # [OPTIONAL] Function for cleaning the data for this Integrator
+        self.column_for_delete = column_for_delete # [OPTIONAL] Column used to identify unique rows in the data file
         self.clean_arg=clean_arg
         self.delimiter=delimiter
         
         log(__name__, '__init__', f"Initialising {self.name}")
 
     def run(self, modified_file, **kwargs):
-        log(__name__, '__init__', f"Running {self.name}")
+        #log(__name__, '__init__', f"Running {self.name}")
         
         process = Process(target=self.__integrate__, args=(modified_file,))
 
@@ -37,70 +41,42 @@ class CsvIntegrator(object):
     def __integrate__(self, modified_file, **kwargs):
         try:
             modified_file_name = modified_file.split('\\')[-1]
-            
-            table_name=self.table_name
-            
-            try:
-                file_names = self.__getImportFileNames__()  
-                for import_file in file_names:
-                    if(modified_file_name.lower() == import_file.FileName.lower()):
-                        self.delimiter = import_file.FieldSeparator
-                        table_name = import_file.TableName 
-            except: # there is no config for this import, continue by using the supplied db table name
-                if(table_name is None):
-                    log(__name__, 'run', f"No config saved for {self.name}", level="Error", email=True, emailSubject=f"{self.name}")
-                
-            
-            if('xls' in modified_file_name.split('\\')[-1]):
-                data_xls = pd.read_excel(modified_file, 'Sheet1', index_col=None)
-                data_xls.to_csv('your_csv.csv', encoding='utf-8')
-                df = csvHelper.getDataframe('your_csv.csv', self.delimiter) 
-            else:
-                df = csvHelper.getDataframe(modified_file, self.delimiter) 
 
-            
-            
-            if(self.table_name is None):
-                table_columns = self.__getDatabaseColumnNames__(table_name) 
-                df = self.__configureDataFrame__(df, table_columns)
+            if(self.file_name is not None): # a file name has been provided for this integrator, only process this file
+                if(self.file_name.lower() != modified_file_name.lower()):
+                    return
                 
+            df = csvHelper.getDataframe(modified_file, self.delimiter, names=self.file_columns) 
             
             if(self.clean is not None):
                 if(self.clean_arg is not None):
                     df = self.clean(df, self.clean_arg)  
                 else:
-                    df = self.clean(df)  
+                    df = self.clean(df) 
 
-            self.__saveToDB__(df, modified_file_name, table_name, **kwargs)
+            if(self.table_columns is not None and self.file_columns is not None): # if we are only adding columns, a list can be passed in
+                df = self.__arrangeColumns__(df, self.table_columns)
+
+            self.__saveToDB__(df, modified_file_name, self.table_name, **kwargs)
             
             log(__name__, '__integrate__', f"{self.name} has completed and {modified_file_name} has been imported", level="Info", email=True, emailSubject=self.name)
         except Exception as e:
             log(__name__, '__integrate__', f"{self.name} has failed for {modified_file_name}: {str(e)}", level="Error", email=True, emailSubject=self.name)
 
-    def __configureDataFrame__(self, df, columns, delimiter=None):
+    def __arrangeColumns__(self, df, table_columns):
         """
-            Dataframe List -> Dataframe
+            List Dataframe -> Dataframe
             Consume a dataframe and a list of columns, return the configured dataframe or None
         """
+        dfs = []
 
-        if(len(df.columns) != len(columns)):
-            log(
-                __name__, 
-                'run', 
-                f"Columns for the table {self.table_name} do not match those from the file", 
-                level="Error", 
-                email=True, 
-                emailSubject=self.name
-            )
-            return None
-        else:
-            dataframe_columns = list()
-            for column in columns:
-                dataframe_columns.append(column.ColumnName)
+        for column in table_columns:
 
-            df.columns = dataframe_columns
-        
-        return df
+            for df_column in df.columns:
+                if(df_column.lower() == column.lower()):
+                    dfs.append(df[df_column].to_frame())
+                    
+        return pd.concat(dfs, axis=1)
         
 
     def __saveToDB__(self, df, file_name, table_name, truncate=True, **kwargs):
@@ -114,26 +90,5 @@ class CsvIntegrator(object):
             dataAccess.deleteById(table_name, self.column_for_delete, ids)
 
         dataAccess.bulkInsert(table_name, output_full_path, truncate=self.truncate)
-    
-
-    def __getImportFileNames__(self):
-        """
-            Returns list of tuples
-            Gets a list of file names to import from the ImportFile table
-        """
-        dataAccess = dtAccss.DataAccess(self.server, self.database)
-        return dataAccess.load("ImportFile")
-
-    def __getDatabaseColumnNames__(self, table_name):
-        """
-            String -> [()]
-            Consumes a database table name and produces a list of columns
-        """
-        dataAccess = dtAccss.DataAccess(self.server, self.database)
-        return dataAccess.load("view_TableColumns", TableName= table_name)
-    
-    def __loadCSV__(self, file_name, sep=None):        
-        return csvHelper.getDataframe(f"{self.file_path}\\{file_name}",delimiter=sep)
-
 
     

@@ -2,7 +2,8 @@ import unittest
 import pandas as pd
 import sys
 sys.path.append("..")
-from csvHelper import getDataframe
+sys.path.append(".")
+from helpers.csvHelper import getDataframe
 
 class TestCsvHelper(unittest.TestCase):
 
