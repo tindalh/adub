@@ -9,13 +9,16 @@ import sys
 import schedule
 import franchisers.refineryInfoFranchiser as refineryInfoFrnchsr
 import integrators.csvIntegrator as csvIntgrtr
+from importers.mcQuilling import McQuilling
+from cred_secrets import USERNAME, PASSWORD
 from cleaners.ieaTxtCleaner import clean as cleanIeaTxt
 from cleaners.rystadCleaner import clean as rystadCleaner
 from cleaners.clipperFloatingStorageCleaner import clean as clipperFloatingStorageCleaner
 import importers.eiaImporter as eiaImprtr
 from helpers.analyticsEmail import sendEmail
 
-
+EXCHANGE_SERVER = 'https://loneca.arcpet.co.uk/EWS/Exchange.asmx'
+EMAIL_ADDRESS = 'henryt@arcpet.co.uk'
 class Initialiser(object):
     def __init__(self):
         self.eiaImporter = eiaImprtr.EiaImporter(
@@ -25,6 +28,14 @@ class Initialiser(object):
             api_key='a50a785e3c8ad1b5bdd26cf522d4d473',
             file_path="{}\\EIA".format(os.environ['ADUB_Import_Output_UNC']),
             bulkinsert_path="{}\\EIA".format(os.environ['ADUB_Import_Output'])
+        )
+
+        
+        self.mcQuilling = McQuilling(
+            'Daily Freight Rate Assessment',
+            "{}\\McQuilling".format(os.environ['ADUB_Import_Output_UNC']),
+            database_server=os.environ['ADUB_DBServer'],
+            database='Price'
         )
      
         self.refineryInfoFranchiser = refineryInfoFrnchsr.RefineryInfoFranchiser(
@@ -307,3 +318,9 @@ class Initialiser(object):
         scheduler = schedule.every().wednesday.at("20:00").do(self.eiaImporter.runSeries).scheduler
         eiaScheduler = jobSchdlr.JobScheduler('Eia Import', scheduler)
         eiaScheduler.schedule()  
+
+    def startMcQuillingImportScheduler(self):
+        #scheduler = schedule.every(1).minutes.do(self.mcQuilling.run, USERNAME,PASSWORD,EXCHANGE_SERVER,EMAIL_ADDRESS).scheduler
+        scheduler = schedule.every(1).day.at("14:00").do(self.mcQuilling.run, USERNAME,PASSWORD,EXCHANGE_SERVER,EMAIL_ADDRESS).scheduler
+        mcQuillingScheduler = jobSchdlr.JobScheduler('McQuilling Import', scheduler)
+        mcQuillingScheduler.schedule()  

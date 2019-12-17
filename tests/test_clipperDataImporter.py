@@ -9,8 +9,21 @@ import helpers.dataAccess as dtAccss
 import helpers.csvHelper as csvHlpr
 import importers.clipperDataImporter as clpprDtaImprtr
 
+
+def get_json_result(url):
+        return json.dumps("")
+
 class TestClipperDataImporter(unittest.TestCase):
+    # str -> json
+    # Consumes a url and produces the resulting json
+
+    # python -m unittest test_clipperDataImporter.TestClipperDataImporter.test_get_json_result
+    def test_get_json_result(self):
+        self.assertEqual(get_json_result(""), json.dumps(""))
+    
     # python -m unittest test_clipperDataImporter.TestClipperDataImporter.test_import
+
+    
 
     def getDataFrame(self, response):
         data = json.loads(response)['record']

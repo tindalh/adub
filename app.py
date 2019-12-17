@@ -6,5 +6,7 @@ if __name__ == '__main__':
     initialiser.startRystadWatcher()      
     initialiser.startIeaWatchers()
     initialiser.startClipperFloatingStorageWatcher()     
-    initialiser.startEIAUpdateBrokerReceiving(); 
+    initialiser.startEIAUpdateBrokerReceiving() 
     initialiser.startEiaImportScheduler()
+    initialiser.startMcQuillingImportScheduler()
+
