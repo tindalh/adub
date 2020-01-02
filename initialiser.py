@@ -33,7 +33,7 @@ class Initialiser(object):
         
         self.mcQuilling = McQuilling(
             'Daily Freight Rate Assessment',
-            "{}\\McQuilling".format(os.environ['ADUB_Import_Output_UNC']),
+            "{}\\McQuilling".format(os.environ['ADUB_Import_Path']),
             database_server=os.environ['ADUB_DBServer'],
             database='Price'
         )
@@ -259,6 +259,19 @@ class Initialiser(object):
             delimiter=','
         )
 
+        self.mcQuillingIntegrator = csvIntgrtr.CsvIntegrator(
+            name='McQuilling Assessments',
+            server=os.environ['ADUB_DBServer'],
+            database='Price',
+            table_name='import.McQuilling',
+            table_columns=['DateStamp','Class','Voyage','Tons','WS','TCE','Demurrage','Comments', 'VoyageType', 'IsDirty'],
+            file_path="{}\\McQuilling".format(os.environ['ADUB_Import_Path']), 
+            output_file_path="{}\\McQuilling\\".format(os.environ['ADUB_Import_Output_UNC']), 
+            truncate=False,
+            delimiter='|',
+            column_for_delete='DateStamp',
+        )
+
         self.clipperFloatingStorageIntegrator = csvIntgrtr.CsvIntegrator(
             name='Clipper Floating Storage',
             server=os.environ['ADUB_DBServer'],
@@ -294,6 +307,9 @@ class Initialiser(object):
 
     def startRystadWatcher(self):
         wtchr.watch('Rystad Production', self.rystadIntegrator)
+
+    def startMcQuillingWatcher(self):
+        wtchr.watch('McQuilling Assessments', self.mcQuillingIntegrator)
 
     def startIeaWatchers(self):
         wtchr.watch('IEA Supply', self.ieaSupplyIntegrator)

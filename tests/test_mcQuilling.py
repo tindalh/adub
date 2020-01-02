@@ -17,8 +17,8 @@ class TestMcQuilling(unittest.TestCase):
         
         self.mcQuilling = McQuilling(
             'Daily Freight Rate Assessment',
-            "{}\\McQuilling".format(os.environ['ADUB_Import_Output_UNC']),
-            database_server='arcsql\\mssqlserverdev',
+            "{}\\McQuilling".format(os.environ['ADUB_Import_Path']),
+            database_server='Lon-Pc53',
             database='Price'
         )
 

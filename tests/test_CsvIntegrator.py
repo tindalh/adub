@@ -241,6 +241,19 @@ class TestCsvIntegrator(unittest.TestCase):
             clean_arg='2015-01-01',
             delimiter=','
         )
+
+        self.mcQuillingIntegrator = csvIntgrtr.CsvIntegrator(
+                name='McQuilling Assessments',
+                server=os.environ['ADUB_DBServer'],
+                database='Price',
+                table_name='import.McQuilling',
+                table_columns=['DateStamp','Class','Voyage','Tons','WS','TCE','Demurrage','Comments', 'VoyageType', 'IsDirty'],
+                file_path="{}\\McQuilling".format(os.environ['ADUB_Import_Path']), 
+                output_file_path="{}\\McQuilling\\".format(os.environ['ADUB_Import_Output_UNC']), 
+                truncate=False,
+                delimiter='|',
+                column_for_delete='DateStamp',
+        )
     
     # python -m unittest test_CsvIntegrator.TestCsvIntegrator.test_run_ieaSupplyIntegrator
     def test_run_ieaSupplyIntegrator(self):
@@ -305,6 +318,10 @@ class TestCsvIntegrator(unittest.TestCase):
         # self.rystadIntegrator.run(os.path.join(self.rystadIntegrator.file_path, 'Rystad Production_2017.csv'))
         # self.rystadIntegrator.run(os.path.join(self.rystadIntegrator.file_path, 'Rystad Production_2018.csv'))
         # self.rystadIntegrator.run(os.path.join(self.rystadIntegrator.file_path, 'Rystad Production_2019.csv'))
+
+     # python -m unittest test_CsvIntegrator.TestCsvIntegrator.test_run_mcQuilling
+    def test_run_mcQuilling(self):            
+        self.mcQuillingIntegrator.run(os.path.join(self.mcQuillingIntegrator.file_path, 'McQuilling_20191230.csv'))
 
     # python -m unittest test_CsvIntegrator.TestCsvIntegrator.test_run_clipperFloatingStorage
     def test_run_clipperFloatingStorage(self):            

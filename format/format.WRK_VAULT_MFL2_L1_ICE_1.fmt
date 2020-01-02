@@ -1,0 +1,30 @@
+14.0
+28
+1       SQLCHAR             0       20      "|"       1     LOAD_GROUP_COMPANY                       SQL_Latin1_General_CP1_CI_AS
+2       SQLCHAR             0       30      "|"       2     LOAD_SYSDATE                             ""
+3       SQLCHAR             0       10      "|"       3     LOAD_DATE                                SQL_Latin1_General_CP1_CI_AS
+4       SQLCHAR             0       12      "|"       4     LOAD_ID                                  ""
+5       SQLCHAR             0       25      "|"       5     DATE                                     SQL_Latin1_General_CP1_CI_AS
+6       SQLCHAR             0       25      "|"       6     DATE_STD                                 SQL_Latin1_General_CP1_CI_AS
+7       SQLCHAR             0       1       "|"       7     DATE_IND                                 SQL_Latin1_General_CP1_CI_AS
+8       SQLCHAR             0       200     "|"       8     HUB                                      SQL_Latin1_General_CP1_CI_AS
+9       SQLCHAR             0       200     "|"       9     PRODUCT                                  SQL_Latin1_General_CP1_CI_AS
+10      SQLCHAR             0       12      "|"       10    PRODUCT_ID                               ""
+11      SQLCHAR             0       1       "|"       11    EST_IND                                  SQL_Latin1_General_CP1_CI_AS
+12      SQLCHAR             0       1       "|"       12    MST_IND                                  SQL_Latin1_General_CP1_CI_AS
+13      SQLCHAR             0       1       "|"       13    ELO_IND                                  SQL_Latin1_General_CP1_CI_AS
+14      SQLCHAR             0       1       "|"       14    LDS_IND                                  SQL_Latin1_General_CP1_CI_AS
+15      SQLCHAR             0       12      "|"       15    REF_KEY                                  ""
+16      SQLCHAR             0       25      "|"       16    STRIP                                    SQL_Latin1_General_CP1_CI_AS
+17      SQLCHAR             0       25      "|"       17    CONTRACT_TYPE                            SQL_Latin1_General_CP1_CI_AS
+18      SQLCHAR             0       50      "|"       18    CS_TRD_PRD                               SQL_Latin1_General_CP1_CI_AS
+19      SQLCHAR             0       50      "|"       19    STRIKE                                   SQL_Latin1_General_CP1_CI_AS
+20      SQLCHAR             0       50      "|"       20    CONTRACT                                 SQL_Latin1_General_CP1_CI_AS
+21      SQLCHAR             0       12      "|"       21    RELATIVEPERIOD_NUM                       ""
+22      SQLCHAR             0       30      "|"       22    SETTLEMENT_PRICE                         ""
+23      SQLCHAR             0       30      "|"       23    NET_CHANGE                               ""
+24      SQLCHAR             0       30      "|"       24    VOLUME                                   ""
+25      SQLCHAR             0       30      "|"       25    OPEN_INTEREST                            ""
+26      SQLCHAR             0       30      "|"       26    OPTION_VOLATILITY                        ""
+27      SQLCHAR             0       25      "|"       27    EXPIRATION_DATE                          SQL_Latin1_General_CP1_CI_AS
+28      SQLCHAR             0       30      "\r\n"   28    LAST_UPDATED_DT                          ""
