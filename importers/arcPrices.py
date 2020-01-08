@@ -11,7 +11,7 @@ TARGET_DB_SCHEMA = "Price.import"
 
 # Change with environment
 source_server_name = "ARCBO8\\DEV"
-target_server_name = "arcsql.arcpet.co.uk"
+target_server_name = "arcsql.arcpet.co.uk\\mssqlserverdev"
 
 # Changing
 current_table_names = [

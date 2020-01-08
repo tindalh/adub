@@ -270,6 +270,7 @@ class Initialiser(object):
             truncate=False,
             delimiter='|',
             column_for_delete='DateStamp',
+            post_op_procedure = 'sp_McQuilling_Load'
         )
 
         self.clipperFloatingStorageIntegrator = csvIntgrtr.CsvIntegrator(

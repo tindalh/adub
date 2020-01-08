@@ -12,7 +12,7 @@ import os
 class CsvIntegrator(object):
     def __init__(self, name, server, database, file_path, output_file_path, table_name, 
                     file_name=None, file_columns=None, table_columns=None, clean=None, 
-                        truncate=True, column_for_delete = None, clean_arg= None, delimiter=None):
+                        truncate=True, column_for_delete = None, clean_arg= None, delimiter=None, post_op_procedure=None):
         self.name = name # Name for this integrator, to appear in logs and emails
         self.server = server # Server name
         self.database = database 
@@ -26,6 +26,7 @@ class CsvIntegrator(object):
         self.truncate = truncate # [OPTIONAL] column headers for the file. Default True
         self.clean = clean # [OPTIONAL] Function for cleaning the data for this Integrator
         self.column_for_delete = column_for_delete # [OPTIONAL] Column used to identify unique rows in the data file
+        self.post_op_procedure = post_op_procedure # [OPTIONAL] a stored procedure to execute
         self.clean_arg=clean_arg
         self.delimiter=delimiter
         
@@ -58,6 +59,9 @@ class CsvIntegrator(object):
                 df = self.__arrangeColumns__(df, self.table_columns)
 
             self.__saveToDB__(df, modified_file_name, self.table_name, **kwargs)
+
+            if(self.post_op_procedure is not None):
+                self.__post_op_procedure__(self.post_op_procedure)
             
             log(__name__, '__integrate__', f"{self.name} has completed and {modified_file_name} has been imported", level="Info", email=True, emailSubject=self.name)
         except Exception as e:
@@ -90,5 +94,10 @@ class CsvIntegrator(object):
             dataAccess.deleteById(table_name, self.column_for_delete, ids)
 
         dataAccess.bulkInsert(table_name, output_full_path, truncate=self.truncate)
+
+    def __post_op_procedure__(self, proc_name):
+        dataAccess = dtAccss.DataAccess(self.server, self.database)
+        
+        dataAccess.executeStoredProcedure(proc_name, [])
 
     
