@@ -5,7 +5,7 @@ import sys
 sys.path.append("..")
 from helpers.log import log
 
-def __replaceInvalidQuantities__(df):
+def _replaceInvalidQuantities(df):
     dfReplaced = df
     if('Quantity' in df.columns):  
         df['Quantity'].replace(["x"], '0',inplace=True)
@@ -15,7 +15,7 @@ def __replaceInvalidQuantities__(df):
     return dfReplaced
 
 
-def __cleanDateColumns__(df):
+def _cleanDateColumns(df):
     """
         Dataframe -> Dataframe
         Consumes a dataframe and converts any date like columns to dtype.datetime64[ns]
@@ -28,7 +28,7 @@ def __cleanDateColumns__(df):
     return df
 
 
-def __setFrequency__(df):
+def _setFrequency(df):
     """
         Dataframe -> Dataframe
         Consumes a dataframe and converts any frequency to one of Day, Month, Quarter, Year
@@ -43,7 +43,7 @@ def __setFrequency__(df):
         df.loc[df['FREQUENCY'].str.contains('monthly'), 'PeriodType'] = 'Month'    
     return df
 
-def __setAsof__(df):
+def _setAsof(df):
     """
         Dataframe -> Dataframe
         Consumes a dataframe and converts any frequency to one of Day, Month, Quarter, Year
@@ -53,13 +53,19 @@ def __setAsof__(df):
             
     return df
 
+def _remove_header_row(df):
+    if(df[df.columns[0]].iloc[0] == df.columns[0]):
+        df = df.drop([0])
+    return df
+
 
 def clean(df):
     log(__name__, 'clean', f"Cleaning data")
 
     dfResult = df
-    dfResult = __replaceInvalidQuantities__(dfResult)
-    dfResult = __setFrequency__(dfResult)
-    dfResult = __setAsof__(dfResult)
-    dfResult = __cleanDateColumns__(dfResult)
+    dfResult = _replaceInvalidQuantities(dfResult)
+    dfResult = _setFrequency(dfResult)
+    dfResult = _setAsof(dfResult)
+    dfResult = _cleanDateColumns(dfResult)
+    dfResult = _remove_header_row(dfResult)
     return dfResult

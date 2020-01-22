@@ -1,0 +1,31 @@
+{
+    "name":"ICE 1630 SGT Brent Crude Future",
+    "columns":[
+        {
+            "name":"",
+            "start":0,
+            "end":2,
+            "blocks":[
+                {
+                    "name":"ICE_Settlement_Curve",
+                    "y_start": 0,
+                    "columns":[
+                        {
+                            "name":"Curve"
+                        },
+                        {
+                            "name":"Asof", 
+                            "value":"file_date"                           
+                        },
+                        {
+                            "name":"ContractDate"
+                        },
+                        {
+                            "name":"Value"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

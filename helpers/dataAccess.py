@@ -1,5 +1,6 @@
 import pyodbc
 import csv
+import datetime
 from helpers.log import log as log
 
 class DataAccess(object):
@@ -44,6 +45,39 @@ class DataAccess(object):
         sql = 'DELETE FROM {} WHERE {} in ({})'.format(table, idName, ids)
         self.cursor.execute(sql)
 
+    def delete(self, table, **kwargs):
+        sql = f"DELETE FROM {table}"
+
+        i = 0
+        params = list()
+        for key in kwargs.keys():
+            if(i == 0):
+                sql += f" WHERE "
+            else:
+                sql += " AND "
+
+            j = 0
+            for value in kwargs[key]:
+                if(j == 0):
+                    sql += ' ('
+
+                sql += f"{key} = ?"
+                params += {value}
+
+                if(j == len(kwargs[key]) - 1):
+                    sql += ') '
+                else:
+                    sql += ' or '
+
+                j+=1
+
+            i+=1
+
+
+        print(f"{sql} with parameters: {params}")
+        
+        self.cursor.execute(sql, params)
+
     def bulkInsert(self, table_name, file_path, delimiter='|', truncate=False):
         sql = ""
 
@@ -84,6 +118,22 @@ class DataAccess(object):
             writer.writerow([x[0] for x in self.cursor.description])
 
             writer.writerows(rows)
+
+    
+    # String String String String String -> datetime.datetime
+    # Consumes table and column name and returns the max. 
+    # ASSUME: column_name is of type Date or DateTime
+    def get_max_database_date(self, table_name, date_column_name, schema_name='import'):
+   
+        max_date = self.cursor.execute(
+            f"SELECT Max({date_column_name}) FROM  [{schema_name}].[{table_name}]").fetchval()
+
+        if(max_date is not None):
+            max_date = datetime.datetime.strptime(max_date, '%Y-%m-%d')
+        else:
+            max_date = datetime.datetime.strptime('2018-01-01', '%Y-%m-%d')
+
+        return max_date
 
     
         

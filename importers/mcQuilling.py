@@ -10,7 +10,7 @@ import json
 import xlrd
 from decimal import Decimal
 from cred_secrets import USERNAME, PASSWORD
-from constants import EXCHANGE_SERVER, EMAIL_ADDRESS
+from constants import EXCHANGE_SERVER, ANALYTICS_EMAIL_ADDRESS
 import pandas as pd
 import csv
 
@@ -200,4 +200,4 @@ if(__name__ == "__main__"):
         database_server=os.environ['ADUB_DBServer'],
         database='Price'
     )
-    mcQ.run(USERNAME, PASSWORD, EXCHANGE_SERVER, EMAIL_ADDRESS)
+    mcQ.run(USERNAME, PASSWORD, EXCHANGE_SERVER, ANALYTICS_EMAIL_ADDRESS)

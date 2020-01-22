@@ -1,17 +1,13 @@
 import subprocess
 import sys
 import os
+import argparse
 sys.path.append('..')
 from helpers.utils import get_project_root
 
 # Constant
 ROOT_DIR = get_project_root()
-SOURCE_DB_SCHEMA = "ARC_DOCDROP.dbo"
-TARGET_DB_SCHEMA = "Price.import"
 
-# Change with environment
-source_server_name = "ARCBO8\\DEV"
-target_server_name = "arcsql.arcpet.co.uk\\mssqlserverdev"
 
 # Changing
 current_table_names = [
@@ -20,8 +16,18 @@ current_table_names = [
         "Target": "ICE_L1_1_Current"
     },
     {
+        "Source": "TEMP_LANDED_MFL_L1_ICE_2",
+        "Target": "ICE_L1_2_Current"
+    },{
+        "Source": "TEMP_LANDED_MFL_L1_ICE_3",
+        "Target": "ICE_L1_3_Current"
+    },{
         "Source": "view_TEMP_LANDED_MFL_L1_ICE_5",
         "Target": "ICE_L1_5_Current"
+    },
+    {
+        "Source": "TEMP_LANDED_MFL_L1E_ICE_1",
+        "Target": "ICE_L1E_1_Current"
     },
     {
         "Source": "TEMP_LANDED_MFL2_L1_ICE_1",
@@ -44,8 +50,19 @@ history_table_names = [
         "Target": "ICE_L1_1_History"
     },
     {
+        "Source": "WRK_VAULT_MFL_L1_ICE_2",
+        "Target": "ICE_L1_2_History"
+    },{
+        "Source": "WRK_VAULT_MFL_L1_ICE_3",
+        "Target": "ICE_L1_3_History"
+    },
+    {
         "Source": "view_WRK_VAULT_MFL_L1_ICE_5",
         "Target": "ICE_L1_5_History"
+    },
+    {
+        "Source": "WRK_VAULT_MFL_L1E_ICE_1",
+        "Target": "ICE_L1E_1_History"
     },
     {
         "Source": "WRK_VAULT_MFL2_L1_ICE_1",
@@ -61,28 +78,29 @@ history_table_names = [
     }
 ]
 
-def copy_current():
-    bulk_copy(current_table_names)
+def bulk_copy(table_names, env_dict):
 
-def copy_history():
-    bulk_copy(history_table_names)
-
-def bulk_copy(table_names):
-
+    print(
+        'Target server: ' + env_dict["target_server"] + \
+        '\nSource Server: ' + env_dict["source_server"] + \
+        '\nFile path: ' + env_dict["file_path"])
+    
     for table in table_names:
         source_table_name = table["Source"]
         target_table_name = table["Target"]
 
         try:
+            format_file_path = os.path.join(ROOT_DIR, "format",
+                                f"format.{source_table_name}.fmt")
+
             subprocess.run(  # bcp to a file
                 [
                     # the batch file
                     os.path.join(ROOT_DIR, "batch", "bcp.out.file.bat"),
-                    f"{SOURCE_DB_SCHEMA}.{source_table_name}",
-                    f"c:\\temp\\data.{source_table_name}.txt",
-                    os.path.join(ROOT_DIR, "format",
-                                f"format.{source_table_name}.fmt"),
-                    source_server_name
+                    env_dict["source_db_schema"] + '.' + source_table_name,
+                    os.path.join(env_dict["file_path"], 'data.' + source_table_name) + ".txt",
+                    format_file_path,
+                    env_dict["source_server"]
                 ], check=True
             )
 
@@ -90,8 +108,8 @@ def bulk_copy(table_names):
                 [
                     # the batch file
                     os.path.join(ROOT_DIR, "batch", "sqlcmd.truncate.bat"),
-                    target_server_name,
-                    f"{TARGET_DB_SCHEMA}.{target_table_name}"
+                    env_dict["target_server"],
+                    env_dict["target_db_schema"] + '.' + target_table_name
                 ], check=True
             )
 
@@ -99,22 +117,70 @@ def bulk_copy(table_names):
                 [
                     # the batch file
                     os.path.join(ROOT_DIR, "batch", "bcp.in.file.bat"),
-                    f"{TARGET_DB_SCHEMA}.{target_table_name}",
-                    f"c:\\temp\\data.{source_table_name}.txt",
+                    env_dict["target_db_schema"] + '.' + target_table_name,
+                    os.path.join(env_dict["file_path"], 'data.' + source_table_name) + ".txt",
                     os.path.join(ROOT_DIR, "format",
                                 f"format.{source_table_name}.fmt"),
-                    target_server_name,
+                    env_dict["target_server"],
                 ], check=True
             )
         except Exception as cpe:
             print(str(cpe))
 
+def get_table_names(data_type):
+    if(data_type.lower().strip() == 'current'):
+        return current_table_names
+    else:
+        return history_table_names
+
+def get_env_dict(env_name, remote=False):
+    d = {}
+
+    if ('dev' in env_name.lower().strip()):
+        d["source_server"] = "ARCBO8\\DEV"
+        d["target_server"] = "Lon-PC53"
+        d["source_db_schema"] = "ARC_DOCDROP.dbo"
+        d["target_db_schema"] = "Price.import"
+        d["file_path"] = "c:\\temp"
+
+
+    elif ('test' in env_name.lower().strip()):
+        d["source_server"] = "ARCBO8\\DEV"
+        d["target_server"] = 'arcsql.arcpet.co.uk\\mssqlserverdev'
+        d["source_db_schema"] = "ARC_DOCDROP.dbo"
+        d["target_db_schema"] = "Price.import"
+        if(remote):
+            d["file_path"] = "\\\\arcsql\\RefineryInfo\\RefineryUpload\\Test\\ArcPrices"
+        else:
+            d["file_path"] = "c:\\temp"
+
+    elif ('prod' in env_name.lower().strip()):
+        d["source_server"] = "ARCBO8\\DEV"
+        d["target_server"] = 'arcsql.arcpet.co.uk'
+        d["source_db_schema"] = "ARC_DOCDROP.dbo"
+        d["target_db_schema"] = "Price.import"
+        if(remote):
+            d["file_path"] = "\\\\arcsql\\RefineryInfo\\RefineryUpload\\ArcPrices"
+        else:
+            d["file_path"] = "c:\\temp"
+
+    else: 
+        raise ValueError("Environment arg should be one of dev, test, prod")
+
+    return d
+
 
 if(__name__ == "__main__"):
-    if(len(sys.argv) > 1):
-        if(sys.argv[1] == 'history'):
-            copy_history()
-        if(sys.argv[1] == 'current'):
-            copy_current()
-    else:
-        bulk_copy(current_table_names)
+    parser = argparse.ArgumentParser(description='Import prices from ARC_DOCDROP.dbo')
+
+    parser.add_argument('--data', help='current day or history', default='current')
+    parser.add_argument('--env', help='dev, test, prod', default='dev')
+    parser.add_argument('--remote', help='executing from remote machine', default=False)
+    args = parser.parse_args()
+
+    table_names = get_table_names(args.data)
+    env_dict = get_env_dict(args.env, args.remote)
+
+
+
+    bulk_copy(table_names, env_dict)

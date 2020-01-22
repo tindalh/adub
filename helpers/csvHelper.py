@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from helpers.log import log as log
+from services.excelExtractor import extract_files
 
 def getDataframe(file, delimiter=None, names=None, newline=''):
     """
@@ -16,3 +17,5 @@ def getDataframe(file, delimiter=None, names=None, newline=''):
     except Exception as e:
         log(__name__, 'getDataframe', f"Failed to process the file: {str(e)}", 'Error', True, 'CsvImporter')
 
+def extract_dataframe(file_list, template, delimiter=None, names=None, newline=''):
+    print(extract_files(file_list, template))
