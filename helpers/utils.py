@@ -5,6 +5,7 @@ import json
 import os
 import csv
 import pandas as pd
+from helpers.log import log
 
 def get_project_root() -> Path:
     """Returns project root folder."""
@@ -107,7 +108,12 @@ def get_unique_values_for_dataframe_keys(df, keys):
                         try:
                             values = [datetime.datetime.strptime(str(x), '%Y-%m-%dT%H:%M:%S.000000000').strftime('%Y%m%d') for x in df[key].unique()]
                         except:
-                            values = [str(x) for x in df[key].unique()]
-        
+                            try:
+                                values = [str(x) for x in df[key].unique()]
+                            except:
+                                values = []
+                                log(__name__, '__integrate__', f"{self.name} has failed for {modified_file_name}: {str(e)}", level="Error")
+        else: 
+            values = [str(x) for x in df[key].unique()]
         d[key] = values 
     return d

@@ -30,7 +30,6 @@ def _set_curve_name_column(df, name):
     return df
 
 def _arrange_columns(df):
-    
     cols = df.columns
     cols = [cols[3], cols[2], cols[0], cols[1]]
     return df[cols]

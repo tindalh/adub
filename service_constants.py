@@ -235,6 +235,7 @@ mcQuillingIntegrator = csvIntgrtr.CsvIntegrator(
     truncate=False,
     delimiter='|',
     keys=['DateStamp'],
+    post_op_procedure='sp_McQuilling_Load',
 )
 
 SGTBrentCrude = csvIntgrtr.CsvIntegrator(
@@ -250,7 +251,8 @@ SGTBrentCrude = csvIntgrtr.CsvIntegrator(
     keys=['Asof', 'Curve'],
     needs_asof=True,
     file_part = 'ICE 1630 SGT Brent Crude Futures',
-    delimiter=','
+    delimiter=',',
+    post_op_procedure='sp_ICE_Settlement_Load',
 )
 
 SGTLSGasOil = csvIntgrtr.CsvIntegrator(
@@ -266,7 +268,8 @@ SGTLSGasOil = csvIntgrtr.CsvIntegrator(
     keys=['Asof', 'Curve'],
     needs_asof=True,
     file_part = 'ICE 1630 SGT LS Gas Oil Futures',
-    delimiter=','
+    delimiter=',',
+    post_op_procedure='sp_ICE_Settlement_Load',
 )
 
 LSGasOil1930 = csvIntgrtr.CsvIntegrator(
@@ -282,7 +285,8 @@ LSGasOil1930 = csvIntgrtr.CsvIntegrator(
     keys=['Asof', 'Curve'],
     needs_asof=True,
     file_part = 'ICE 1930 LS Gas Oil Futures',
-    delimiter=','
+    delimiter=',',
+    post_op_procedure='sp_ICE_Settlement_Load',
 )
 
 WTICrude = csvIntgrtr.CsvIntegrator(
@@ -298,7 +302,8 @@ WTICrude = csvIntgrtr.CsvIntegrator(
     keys=['Asof', 'Curve'],
     needs_asof=True,
     file_part = 'ICE 1630 WTI Crude Futures',
-    delimiter=','
+    delimiter=',',
+    post_op_procedure='sp_ICE_Settlement_Load',
 )
 
 HeatingOil = csvIntgrtr.CsvIntegrator(
@@ -314,7 +319,8 @@ HeatingOil = csvIntgrtr.CsvIntegrator(
     keys=['Asof', 'Curve'],
     needs_asof=True,
     file_part = 'ICE 1630 Heating Oil Futures',
-    delimiter=','
+    delimiter=',',
+    post_op_procedure='sp_ICE_Settlement_Load',
 )
 
 RBOB = csvIntgrtr.CsvIntegrator(
@@ -330,7 +336,8 @@ RBOB = csvIntgrtr.CsvIntegrator(
     keys=['Asof', 'Curve'],
     needs_asof=True,
     file_part = 'ICE 1630 (RBOB) Gasoline Futures',
-    delimiter=','
+    delimiter=',',
+    post_op_procedure='sp_ICE_Settlement_Load',
 )
 
 BrentCrude1630 = csvIntgrtr.CsvIntegrator(
@@ -346,7 +353,8 @@ BrentCrude1630 = csvIntgrtr.CsvIntegrator(
     keys=['Asof', 'Curve'],
     needs_asof=True,
     file_part = 'ICE 1630 Brent Crude Futures',
-    delimiter=','
+    delimiter=',',
+    post_op_procedure='sp_ICE_Settlement_Load',
 )
 
 eiaImporter = eiaImprtr.EiaImporter(
@@ -372,7 +380,8 @@ eiSGTBrentCrude = EmailImporter(
     database_server=os.environ['ADUB_DBServer'],
     database='Price',
     name='ICE 1630 SGT Futures',
-    table_name = 'ICE_Settlement_Curve'
+    table_name = 'ICE_Settlement_Curve',
+    file_parts = ['ICE 1630 SGT Brent Crude Futures','ICE 1630 SGT LS Gas Oil Futures'],
 )
 
 ei1930LSGasOil = EmailImporter(
@@ -381,7 +390,8 @@ ei1930LSGasOil = EmailImporter(
     database_server=os.environ['ADUB_DBServer'],
     database='Price',
     name='ICE 1930 LS Gas Oil Curve Futures',
-    table_name = 'ICE_Settlement_Curve'
+    table_name = 'ICE_Settlement_Curve',
+    file_parts=['ICE 1930 LS Gas Oil Futures']
 )
 
 ei1630Oil = EmailImporter(
@@ -390,7 +400,8 @@ ei1630Oil = EmailImporter(
     database_server=os.environ['ADUB_DBServer'],
     database='Price',
     name='ICE 1630 Oil Futures Curves',
-    table_name = 'ICE_Settlement_Curve'
+    table_name = 'ICE_Settlement_Curve',
+    file_parts=['ICE 1630 WTI Crude Futures','ICE 1630 Heating Oil Futures','ICE 1630 (RBOB) Gasoline Futures']
 )
 
 ei1630BrentCurve = EmailImporter(
@@ -399,7 +410,8 @@ ei1630BrentCurve = EmailImporter(
     database_server=os.environ['ADUB_DBServer'],
     database='Price',
     name='ICE 1630 Brent Curve Futures',
-    table_name = 'ICE_Settlement_Curve'
+    table_name = 'ICE_Settlement_Curve',
+    file_parts=['ICE 1630 Brent Crude Futures']
 )
 
 refineryInfoFranchiser = refineryInfoFrnchsr.RefineryInfoFranchiser(

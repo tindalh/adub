@@ -72,31 +72,32 @@ class Initialiser(object):
         eiaScheduler.schedule()  
 
     def startMcQuillingImportScheduler(self):
-        #scheduler = schedule.every(1).minutes.do(mcQuilling.run, USERNAME,PASSWORD,EXCHANGE_SERVER,EMAIL_ADDRESS).scheduler
-        scheduler = schedule.every(1).day.at("14:00").do(mcQuilling.run, USERNAME,PASSWORD,EXCHANGE_SERVER,EMAIL_ADDRESS).scheduler
+        #scheduler = schedule.every(10).minutes.do(mcQuilling.run).scheduler
+        scheduler = schedule.every(1).day.at("14:00").do(mcQuilling.run).scheduler
         mcQuillingScheduler = jobSchdlr.JobScheduler('McQuilling Import', scheduler)
         mcQuillingScheduler.schedule()  
 
     def starteiSGTBrentCrudeImportScheduler(self):
-        #scheduler = schedule.every(1).minutes.do(mcQuilling.run, USERNAME,PASSWORD,EXCHANGE_SERVER,EMAIL_ADDRESS).scheduler
+        #scheduler = schedule.every(1).minutes.do(eiSGTBrentCrude.run).scheduler
         scheduler = schedule.every(1).day.at("20:00").do(eiSGTBrentCrude.run).scheduler
         jobScheduler = jobSchdlr.JobScheduler('ICE SGT Brent Crude Futures Import', scheduler)
         jobScheduler.schedule()  
 
     def startei1930LSGasOilImportScheduler(self):
-        #scheduler = schedule.every(1).minutes.do(mcQuilling.run, USERNAME,PASSWORD,EXCHANGE_SERVER,EMAIL_ADDRESS).scheduler
-        scheduler = schedule.every(1).day.at("20:00").do(ei1930LSGasOil.run).scheduler
+        #scheduler = schedule.every(1).minutes.do(ei1930LSGasOil.run).scheduler
+        scheduler = schedule.every(1).day.at("20:05").do(ei1930LSGasOil.run).scheduler
         jobScheduler = jobSchdlr.JobScheduler('ICE 1930 LS Gas Oil Futures Import', scheduler)
         jobScheduler.schedule() 
 
     def startei1630OilImportScheduler(self):
-        #scheduler = schedule.every(1).minutes.do(mcQuilling.run, USERNAME,PASSWORD,EXCHANGE_SERVER,EMAIL_ADDRESS).scheduler
-        scheduler = schedule.every(1).day.at("20:00").do(ei1630Oil.run).scheduler
+        #scheduler = schedule.every(1).minutes.do(ei1630Oil.run).scheduler
+        scheduler = schedule.every(1).day.at("20:10").do(ei1630Oil.run).scheduler
         jobScheduler = jobSchdlr.JobScheduler('ICE 1630 Oil Futures Import', scheduler)
         jobScheduler.schedule() 
 
     def startei1630BrentCurveImportScheduler(self):
-        #scheduler = schedule.every(1).minutes.do(mcQuilling.run, USERNAME,PASSWORD,EXCHANGE_SERVER,EMAIL_ADDRESS).scheduler
-        scheduler = schedule.every(1).day.at("20:00").do(ei1630BrentCurve.run).scheduler
+        #scheduler = schedule.every(1).minutes.do(ei1630BrentCurve.run).scheduler
+        scheduler = schedule.every(1).day.at("20:15").do(ei1630BrentCurve.run).scheduler
         jobScheduler = jobSchdlr.JobScheduler('ICE 1630 Brent Curve Futures Import', scheduler)
         jobScheduler.schedule() 
+

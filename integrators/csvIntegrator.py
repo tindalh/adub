@@ -44,13 +44,14 @@ class CsvIntegrator(object):
     def __integrate__(self, modified_file, **kwargs):
         try:
             modified_file_name = modified_file.split('\\')[-1]
-
+            print(modified_file_name)
             if(self.file_name is not None): # a file name has been provided for this integrator, only process this file
                 if(self.file_name.lower() != modified_file_name.lower()):
                     return
 
             if(self.file_part is not None): # a file name has been provided for this integrator, only process this file
-                if(self.file_part.lower() not in modified_file_name.lower()):
+                if(self.file_part.lower() not in modified_file_name.lower() or '_' == modified_file_name.lower()[-1]):
+                    
                     return
                 
             df = csvHelper.getDataframe(modified_file, self.delimiter, names=self.file_columns) 
@@ -99,6 +100,7 @@ class CsvIntegrator(object):
         
         if(self.keys is not None):
             dict_keys = get_unique_values_for_dataframe_keys(df, self.keys)
+            
             dataAccess.delete(table_name, **dict_keys)
 
         dataAccess.bulkInsert(table_name, output_full_path, truncate=self.truncate)

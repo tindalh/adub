@@ -22,7 +22,7 @@ class McQuilling(object):
         self.database_server = database_server
         self.database = database
 
-    def run(self, user, password, exchange_server, email_address):
+    def run(self):
 
         if(not os.path.isdir(self.file_path)):
             log(__name__, 'run',
@@ -30,8 +30,8 @@ class McQuilling(object):
             return
 
         config = Configuration(
-            service_endpoint=exchange_server, credentials=Credentials(user, password))
-        account = Account(email_address, config=config, access_type=DELEGATE)
+            service_endpoint=EXCHANGE_SERVER, credentials=Credentials(USERNAME, PASSWORD))
+        account = Account(ANALYTICS_EMAIL_ADDRESS, config=config, access_type=DELEGATE)
 
         max_saved = self.get_max_file_date(os.listdir(self.file_path))
 

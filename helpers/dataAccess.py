@@ -120,13 +120,40 @@ class DataAccess(object):
             writer.writerows(rows)
 
     
-    # String String String String String -> datetime.datetime
+    # String String String dict -> datetime.datetime
     # Consumes table and column name and returns the max. 
     # ASSUME: column_name is of type Date or DateTime
-    def get_max_database_date(self, table_name, date_column_name, schema_name='import'):
-   
-        max_date = self.cursor.execute(
-            f"SELECT Max({date_column_name}) FROM  [{schema_name}].[{table_name}]").fetchval()
+    def get_max_database_date(self, table_name, date_column_name, schema_name='dbo', **kwargs):
+        sql = f"SELECT Max({date_column_name}) FROM [{schema_name}].[{table_name}]"
+
+        i = 0
+        params = list()
+        for key in kwargs.keys():
+            if(i == 0):
+                sql += f" WHERE "
+            else:
+                sql += " AND "
+
+            j = 0
+            for value in kwargs[key]:
+                if(j == 0):
+                    sql += ' ('
+
+                sql += f"{key} = ?"
+                params += {value}
+
+                if(j == len(kwargs[key]) - 1):
+                    sql += ') '
+                else:
+                    sql += ' or '
+
+                j+=1
+
+            i+=1
+
+        print(f"{sql} with parameters: {params}")
+        
+        max_date = self.cursor.execute(sql, params).fetchval()
 
         if(max_date is not None):
             max_date = datetime.datetime.strptime(max_date, '%Y-%m-%d')

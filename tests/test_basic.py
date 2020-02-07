@@ -1,5 +1,6 @@
 from io import StringIO
 import unittest
+import time
 import json
 import pandas as pd
 import sys
@@ -7,8 +8,9 @@ import os
 import datetime
 import xlrd
 from exchangelib import DELEGATE, NTLM, Configuration, Credentials, Account, FileAttachment, EWSDateTime, Mailbox, Message
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock, patch
 from unittest import mock
+from multiprocessing import Process, Queue
 
 
 sys.path.append('..')
@@ -38,6 +40,7 @@ from services.excelExtractor import extract_files, _extract_sections, \
     _extract_blocks, _extract_rows, _extract_columns, _get_block_start, \
      _get_block_end, _get_value
 from services.exchangeWrapper import ExchangeWrapper
+from services.priceReturns import calculate_returns
 from exchangelib import DELEGATE,Configuration, Credentials, Account, FileAttachment, EWSDateTime
 from constants import ANALYTICS_EMAIL_ADDRESS, EXCHANGE_SERVER
 from service_constants import *
@@ -384,23 +387,23 @@ class DataAccessCase(unittest.TestCase):
         self.server = "Lon-PC53"
         self.database = "Analytics"
         
-    # python -m unittest test_dataAccess.DataAccessCase.test_loadToCSV
+    # python -m unittest test_basic.DataAccessCase.test_loadToCSV
     def test_loadToCSV(self):
         dataAccess = DataAccess(self.server, self.database)
         self.assertIsNone(dataAccess.loadToCSV("Select * from Period"))
 
-    # python -m unittest test_dataAccess.DataAccessCase.test_bulkInsert
+    # python -m unittest test_basic.DataAccessCase.test_bulkInsert
     def test_bulkInsert(self):
         dataAccess = DataAccess(self.server, 'IEAData')
         self.assertIsNone(dataAccess.bulkInsert('SUPPLY', "C:\Dev\Excel Files\Output\IEA\Supply.txt", truncate=True ))
 
-    # python -m unittest test_dataAccess.DataAccessCase.test_deleteById
+    # python -m unittest test_basic.DataAccessCase.test_deleteById
     def test_deleteById(self):
         dataAccess = DataAccess(self.server, 'Analytics')
         self.assertIsNone(dataAccess.deleteById('RystadProduction', "Period", "'2019-02-01'" ))
 
 
-    # python -m unittest test_dataAccess.DataAccessCase.test_load
+    # python -m unittest test_basic.DataAccessCase.test_load
     def test_load(self):
         dataAccess = DataAccess(self.server, self.database)
         self.assertIsInstance(dataAccess.load('Commodity', Name = "Crude"), list)
@@ -409,7 +412,8 @@ class DataAccessCase(unittest.TestCase):
 
     def test_get_max_database_date(self):
         dataAccess = DataAccess(self.server, 'Price')
-        self.assertEqual(type(dataAccess.get_max_database_date('McQuilling', 'DateStamp')), datetime.datetime)
+        d = {'Class':['VLCC']}
+        self.assertEqual(type(dataAccess.get_max_database_date('McQuilling', 'DateStamp', 'import', **d)), datetime.datetime)
 
 
     def test_delete_two_parameters_one_value_each(self):
@@ -456,16 +460,16 @@ class EiaImporterCase(unittest.TestCase):
 
 class EmailImporterCase(unittest.TestCase):
     def test_SGTBrentCrude(self):
-        self.eiSGTBrentCrude.run()
+        eiSGTBrentCrude.run()
 
     def test_1930LSGasOil(self):
-        self.ei1930LSGasOil.run()
+        ei1930LSGasOil.run()
 
     def test_ei1630Oil(self):
-        self.ei1630Oil.run()
+        ei1630Oil.run()
 
     def test_ei1630BrentCurve(self):
-        self.ei1630BrentCurve.run()
+        ei1630BrentCurve.run()
 
 class ExcelExtractorCase(unittest.TestCase):
     def setUp(self):
@@ -784,15 +788,18 @@ class ExchangeWrapperCase(unittest.TestCase):
         self.m.attach(a)
         self.file_path = 'C:\Dev\Excel Files\ExchangeWrapper'
 
-        self.exchangeWrapper.get_emails = MagicMock(return_value=self.m)
+        
 
     def test_get_start_date(self):
+        
         date = datetime.datetime(2000, 1, 1, 12, 1, 30)
         self.assertEqual(date.year, self.exchangeWrapper.get_start_date(date).year)
 
     def test_get_emails(self):
-        m = self.exchangeWrapper.get_emails('Daily motivation', datetime.datetime(2000, 1, 1, 12, 1, 30))
-        self.assertEqual(m.subject, self.m.subject)
+        with mock.patch('services.exchangeWrapper.ExchangeWrapper.get_emails') as MockClass:
+            MockClass.return_value = self.m.subject
+            result = self.exchangeWrapper.get_emails('Daily motivation', datetime.datetime(2000, 1, 1, 12, 1, 30))
+            self.assertEqual(result, self.m.subject)
 
     def test_save_email_attachments(self):
         self.exchangeWrapper.save_email_attachments((self.m,), self.file_path)
@@ -803,6 +810,22 @@ class ExchangeWrapperCase(unittest.TestCase):
         self.exchangeWrapper.save_attachment(self.m.attachments[0], self.file_path, datetime.datetime(2000, 1, 1, 12, 1, 30))
         time_delta = datetime.datetime.now() - datetime.datetime.utcfromtimestamp(os.path.getmtime(os.path.join(self.file_path, 'my_file_20000101.txt')))
         self.assertLess(time_delta.seconds, 100000)
+
+    
+
+    def test_get_emails_live(self):
+        
+        for i in range (10):
+            q = Queue()
+            p = Process(target=get_email_bg, args=(q,i))
+            p.start()
+            time.sleep(1)
+
+def get_email_bg(q, i):
+    date = datetime.datetime(2020,2,5,12,0,0)
+    exchangeWrapper = ExchangeWrapper()
+    emails = exchangeWrapper.get_emails('ICE 1630 Oil Futures Curves', date)
+    exchangeWrapper.save_email_attachments(list(emails), os.path.join('C:\Dev\Excel Files\ExchangeWrapper', 'ICE'))
 
 class ICE_SettlementCleanerCase(unittest.TestCase):
     def setUp(self):
@@ -992,7 +1015,7 @@ class McQuillingCase(unittest.TestCase):
             'Daily Freight Rate Assessment_2019_20191201.xlsm'
         ]
 
-    # python -m unittest test_mcQuilling.McQuillingCase.test_get_attachments
+    # python -m unittest test_basic.McQuillingCase.test_get_attachments
     def test_get_attachments(self):
         config = Configuration( 
             service_endpoint=EXCHANGE_SERVER, credentials=Credentials(USERNAME, PASSWORD))
@@ -1002,22 +1025,22 @@ class McQuillingCase(unittest.TestCase):
             self.mcQuilling.get_attachments(
                 list(self.mcQuilling.get_emails(datetime.datetime.strptime(str(20191213), '%Y%m%d'), 'Daily Freight Rate Assessment', account)), self.mcQuilling.file_path))  
 
-    # python -m unittest test_mcQuilling.McQuillingCase.test_run
+    # python -m unittest test_basic.McQuillingCase.test_run
     def test_run(self):
-        self.assertIsNone(self.mcQuilling.run(USERNAME, PASSWORD, EXCHANGE_SERVER, ANALYTICS_EMAIL_ADDRESS))
+        self.assertIsNone(self.mcQuilling.run())
 
-    # python -m unittest test_mcQuilling.McQuillingCase.test_run_with_bad_path
+    # python -m unittest test_basic.McQuillingCase.test_run_with_bad_path
     def test_run_with_bad_path(self):
         temp_path = self.mcQuilling.file_path
         self.mcQuilling.file_path = "bad_path"
-        self.assertIsNone(self.mcQuilling.run(USERNAME, PASSWORD, EXCHANGE_SERVER, ANALYTICS_EMAIL_ADDRESS))
+        self.assertIsNone(self.mcQuilling.run())
         self.mcQuilling.file_path = temp_path
 
-    # python -m unittest test_mcQuilling.McQuillingCase.test_get_max_file_date
+    # python -m unittest test_basic.McQuillingCase.test_get_max_file_date
     def test_get_max_file_date(self):
         self.assertEqual(self.mcQuilling.get_max_file_date(self.file_list), 20191201)
 
-    # python -m unittest test_mcQuilling.McQuillingCase.test_get_max_file_date_with_bad_file_name
+    # python -m unittest test_basic.McQuillingCase.test_get_max_file_date_with_bad_file_name
     def test_get_max_file_date_with_bad_file_name(self):
         self.assertEqual(self.mcQuilling.get_max_file_date(self.bad_file_list), 20191201)
 
@@ -1150,6 +1173,67 @@ class UtilsCase(unittest.TestCase):
         }
         print(get_unique_values_for_dataframe_keys(df, keys))
         self.assertEqual(get_unique_values_for_dataframe_keys(df, keys), expect)
+
+    def test_get_unique_values_for_dataframe_keys_YYYYMMDD_wrong_order_keys(self):
+        df = pd.DataFrame(
+            {
+                'id': [1,2,3],
+                'date': ['20100122','20100122','20100102'],
+                'value': ['a','b','c']
+            }
+        )
+
+        keys = ['value', 'date']
+
+        expect = {
+            'value':['a','b','c'],
+            'date': ['20100122','20100102'],
+        }
+        print(get_unique_values_for_dataframe_keys(df, keys))
+        self.assertEqual(get_unique_values_for_dataframe_keys(df, keys), expect)
+
+    def test_get_unique_values_for_dataframe_keys_YYYYMMDD(self):
+        df = pd.DataFrame(
+            {
+                'id': [1,2,3],
+                'date': ['20100122','20100122','20100102'],
+                'value': ['a','b','c']
+            }
+        )
+
+        keys = ['date','value']
+
+        expect = {
+            
+            'date': ['20100122','20100102'],
+            'value':['a','b','c']
+        }
+        print(get_unique_values_for_dataframe_keys(df, keys))
+        self.assertEqual(get_unique_values_for_dataframe_keys(df, keys), expect)
+
+class priceReturnsCase(unittest.TestCase):
+    def setUp(self):
+        self.rows = [
+            ('ICE', 'North Sea', 'ICE', '19859', 'WAB', 'FUTURE', 'Settlement', '2019-11-06', '2019-12-01', '2019-12-27', 4, 63.39, None, None), 
+            ('ICE', 'North Sea', 'ICE', '19859', 'WAB', 'FUTURE', 'Settlement', '2019-11-07', '2019-12-01', '2019-12-27', 3, 63.28, None, None), 
+            ('ICE', 'North Sea', 'ICE', '19859', 'WAB', 'FUTURE', 'Settlement', '2019-11-08', '2020-01-01', '2020-01-03', 4, 62.54, None, None)
+        ]
+
+    def test_calculate_returns_no_instrument(self):
+        with mock.patch('helpers.dataAccess.DataAccess.load') as MockClass:
+            MockClass.return_value = []
+            result = calculate_returns('')
+            self.assertEqual(result, [])
+
+    def test_calculate_returns_with_instrument(self):
+        with mock.patch('helpers.dataAccess.DataAccess.load') as MockClass:
+            MockClass.return_value = self.rows
+            result = calculate_returns('North Sea')
+            self.assertEqual(result, self.rows)
+
+
+    
+
 
 
        
