@@ -58,12 +58,16 @@ def load_json(file_path):
 
 # list(dict) string -> None
 # Consumes a list of dicts and saves them to a csv file in file_path
-def write_to_csv(list_of_dicts, file_path):
+def write_to_csv(list_of_dicts, file_path, append=False):
     if(len(list_of_dicts) == 0):
         return
 
+    write_mode = 'w'
+    if(append == True):
+        write_mode = 'a'
+
     keys = list_of_dicts[0].keys()
-    with open(file_path, 'w', newline='') as csvfile:
+    with open(file_path, write_mode, newline='') as csvfile:
         writer = csv.DictWriter(csvfile, keys, delimiter='|')
         writer.writeheader()
         writer.writerows(list_of_dicts)

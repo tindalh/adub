@@ -4,6 +4,9 @@ import os
 import argparse
 sys.path.append('..')
 from helpers.utils import get_project_root
+from helpers.dataAccess import DataAccess
+from services.priceReturns import generate_returns
+from helpers.log import log
 
 # Constant
 ROOT_DIR = get_project_root()
@@ -141,7 +144,7 @@ def get_env_dict(env_name, remote=False):
         d["target_server"] = "Lon-PC53"
         d["source_db_schema"] = "ARC_DOCDROP.dbo"
         d["target_db_schema"] = "Price.import"
-        d["file_path"] = "c:\\temp"
+        d["file_path"] = "d:\\temp"
 
 
     elif ('test' in env_name.lower().strip()):
@@ -152,22 +155,54 @@ def get_env_dict(env_name, remote=False):
         if(remote):
             d["file_path"] = "\\\\arcsql\\RefineryInfo\\RefineryUpload\\Test\\ArcPrices"
         else:
-            d["file_path"] = "c:\\temp"
+            d["file_path"] = "d:\\temp"
 
     elif ('prod' in env_name.lower().strip()):
-        d["source_server"] = "ARCBO8\\DEV"
+        d["source_server"] = "ARCBO3\\LIVE"
         d["target_server"] = 'arcsql.arcpet.co.uk'
         d["source_db_schema"] = "ARC_DOCDROP.dbo"
         d["target_db_schema"] = "Price.import"
         if(remote):
             d["file_path"] = "\\\\arcsql\\RefineryInfo\\RefineryUpload\\ArcPrices"
         else:
-            d["file_path"] = "c:\\temp"
+            d["file_path"] = "d:\\temp"
 
     else: 
         raise ValueError("Environment arg should be one of dev, test, prod")
 
     return d
+
+def run_daily_prices():
+    try:
+        
+        table_names = get_table_names('current')
+
+        env = 'prod'
+        if('dev' in os.environ['ADUB_DBServer'].lower()):
+            env = 'test'
+        elif('pc53' in os.environ['ADUB_DBServer'].lower()):
+            env = 'dev'
+
+        log(__name__, 'run_daily_prices', f"Running import of prices in {env}")
+        
+        env_dict = get_env_dict(env)
+
+        # get raw data
+        bulk_copy(table_names, env_dict)
+
+        log(__name__, 'run_daily_prices', f"Finished bulk copy")
+
+        # process prices
+        dta_accss = DataAccess(os.environ['ADUB_DBServer'], 'Price')
+        dta_accss.executeStoredProcedure('sp_load_ice_prices_current')
+        dta_accss.executeStoredProcedure('sp_load_nymex_prices_current')
+        log(__name__, 'run_daily_prices', f"Finished stored proc")
+
+        generate_returns()
+
+        log(__name__, 'run_daily_prices', f"Finished generating returns")
+    except Exception as e:
+        log(__name__, 'run_daily_prices', f"Arc Price Importer has failed: {str(e)}", level="Error", email=True, emailSubject=self.name)
 
 
 if(__name__ == "__main__"):
@@ -184,3 +219,10 @@ if(__name__ == "__main__"):
 
 
     bulk_copy(table_names, env_dict)
+
+    # process prices
+    dta_accss = DataAccess(os.environ['ADUB_DBServer'], 'Price')
+    dta_accss.executeStoredProcedure('sp_load_ice_prices_current')
+    dta_accss.executeStoredProcedure('sp_load_nymex_prices_current')
+
+    generate_returns()

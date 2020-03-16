@@ -1,4 +1,5 @@
 import logging
+import os
 
 from constants import LOG_FILE
 import helpers.analyticsEmail as analyticsEmail
@@ -19,6 +20,9 @@ def log(moduleName, functionName, message, level='Info', email=False, emailSubje
         logging.error(logMessage)
 
     if(email):
+        if(os.environ['ADUB_DBServer'].lower() != 'arcsql'):
+            emailSubject = 'TEST ' + emailSubject
+            
         analyticsEmail.sendEmail(level, emailSubject, message, emailTable)
 
     return logMessage

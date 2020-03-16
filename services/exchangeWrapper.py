@@ -1,4 +1,4 @@
-from exchangelib import FileAttachment, Configuration, Credentials, Account, DELEGATE, EWSDateTime
+from exchangelib import FileAttachment, FaultTolerance, Configuration, Credentials, Account, DELEGATE, EWSDateTime
 import datetime
 import sys
 sys.path.append('..')
@@ -10,7 +10,7 @@ from constants import ANALYTICS_EMAIL_ADDRESS, EXCHANGE_SERVER
 class ExchangeWrapper:
     def __init__(self):
         self.config = Configuration(
-            service_endpoint=EXCHANGE_SERVER, credentials=Credentials(USERNAME, PASSWORD))
+            service_endpoint=EXCHANGE_SERVER, retry_policy=FaultTolerance(max_wait=3600), credentials=Credentials(USERNAME, PASSWORD))
         self.account = Account(ANALYTICS_EMAIL_ADDRESS, config=self.config, access_type=DELEGATE)
 
     # datetime.datetime -> exchangelib.EWSDate

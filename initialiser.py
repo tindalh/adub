@@ -1,6 +1,7 @@
 import services.brokerReceiver as brkrRcvr
 import services.importWatcher as wtchr
 import services.jobScheduler as jobSchdlr
+from importers.arcPrices import run_daily_prices
 import datetime
 import logging
 import copy
@@ -69,6 +70,14 @@ class Initialiser(object):
         #scheduler = schedule.every().minutes.do(eiaImporter.runSeries).scheduler
         scheduler = schedule.every().wednesday.at("20:00").do(eiaImporter.runSeries).scheduler
         eiaScheduler = jobSchdlr.JobScheduler('Eia Import', scheduler)
+        eiaScheduler.schedule()  
+
+
+    def startArcPricesScheduler(self):       
+
+        #scheduler = schedule.every(1).minutes.do(run_daily_prices).scheduler
+        scheduler = schedule.every().day.at("06:00").do(run_daily_prices).scheduler
+        eiaScheduler = jobSchdlr.JobScheduler('Price Import', scheduler)
         eiaScheduler.schedule()  
 
     def startMcQuillingImportScheduler(self):

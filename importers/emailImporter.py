@@ -43,9 +43,11 @@ class EmailImporter(object):
 
                 max_database_date = min(max_database_date, data_access.get_max_database_date(self.table_name, 'Asof', schema_name='import', **d))
                 
-                list_emails = exchangeWrapper.get_emails(self.email_subject, max_database_date)
-                exchangeWrapper.save_email_attachments(list(list_emails), self.file_path)
-                time.sleep(1)
+            list_emails = exchangeWrapper.get_emails(self.email_subject, max_database_date)
+            exchangeWrapper.save_email_attachments(list(list_emails), self.file_path)
+
+            #account.protocol.close()
+
             log(__name__, '__run__', f"{self.name} has downloaded all emails with the subject: {self.email_subject}", level="Info")
         except Exception as e:
             log(__name__, '__run__', f"{self.name} has failed: {str(e)}", level="Error", email=True, emailSubject=self.name)

@@ -23,7 +23,16 @@ class DataAccess(object):
             else:
                 sql += " AND "
                 
-            sql += f"{key} = ?"
+            if(key[:1] == ">"):
+                sql += f"{key[1:]} > ?"
+            elif(key[:1] == "<"):
+                sql += f"{key[1:]} < ?"
+            elif(key[:2] == ">="):
+                sql += f"{key[2:]} >= ?"
+            elif(key[:2] == "<="):
+                sql += f"{key[2:]} <= ?"
+            else:
+                sql += f"{key} = ?"
             params += {kwargs[key]}
 
             i+=1
@@ -61,7 +70,12 @@ class DataAccess(object):
                 if(j == 0):
                     sql += ' ('
 
-                sql += f"{key} = ?"
+                if(key[:1] == ">"):
+                    sql += f"{key[1:]} > ?"
+                elif(key[:1] == "<"):
+                    sql += f"{key[1:]} < ?"
+                else:
+                    sql += f"{key} = ?"
                 params += {value}
 
                 if(j == len(kwargs[key]) - 1):
@@ -74,7 +88,7 @@ class DataAccess(object):
             i+=1
 
 
-        print(f"{sql} with parameters: {params}")
+        log(__name__, 'delete', f"Executing {sql} with parameters: {params}")
         
         self.cursor.execute(sql, params)
 
@@ -96,15 +110,19 @@ class DataAccess(object):
         affectedCount = self.cursor.execute(sql).rowcount
         return affectedCount   
 		
-    def executeStoredProcedure(self, table, params):
+    def executeStoredProcedure(self, table, params=None):
         """Assumes params is a tuple"""
         sql = 'exec [' + self.database + '].[dbo].[' + table + '] '
 
-        for p in params:
-            sql += '?,'
+        if(params is not None):
+            for p in params:
+                sql += '?,'
 
         sql = sql[:-1]  
-        self.cursor.execute(sql,params)
+        if(params is not None):
+            self.cursor.execute(sql,params)
+        else:
+            self.cursor.execute(sql)
 
     def loadToCSV(self, sql, file_name="loadToCSV_output", file_path=""):
         rows = self.cursor.execute(sql)
@@ -151,7 +169,7 @@ class DataAccess(object):
 
             i+=1
 
-        print(f"{sql} with parameters: {params}")
+        log(__name__, 'load', f"Executing {sql} with parameters: {params}")
         
         max_date = self.cursor.execute(sql, params).fetchval()
 

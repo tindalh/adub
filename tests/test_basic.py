@@ -1,11 +1,14 @@
 from io import StringIO
+import collections
 import unittest
 import time
+import pyodbc
 import json
 import pandas as pd
+import numpy
 import sys
 import os
-import datetime
+from datetime import datetime, date
 import xlrd
 from exchangelib import DELEGATE, NTLM, Configuration, Credentials, Account, FileAttachment, EWSDateTime, Mailbox, Message
 from unittest.mock import MagicMock, Mock, patch
@@ -40,7 +43,7 @@ from services.excelExtractor import extract_files, _extract_sections, \
     _extract_blocks, _extract_rows, _extract_columns, _get_block_start, \
      _get_block_end, _get_value
 from services.exchangeWrapper import ExchangeWrapper
-from services.priceReturns import calculate_returns
+from services.priceReturns import *
 from exchangelib import DELEGATE,Configuration, Credentials, Account, FileAttachment, EWSDateTime
 from constants import ANALYTICS_EMAIL_ADDRESS, EXCHANGE_SERVER
 from service_constants import *
@@ -380,7 +383,7 @@ class CsvHelperCase(unittest.TestCase):
             ]
         }
         #TODO
-        self.assertIsNone(1)
+        #self.assertIsNone(1)
 
 class DataAccessCase(unittest.TestCase):
     def setUp(self):
@@ -410,10 +413,26 @@ class DataAccessCase(unittest.TestCase):
         self.assertIsInstance(dataAccess.load('Commodity'), list)
         self.assertIsInstance(dataAccess.load('Commodity', Name = "Crude", Description=None), list) # TODO where is null
 
+    # python -m unittest test_basic.DataAccessCase.test_load_with_date_filter
+    def test_load_with_date_filter(self):
+        dataAccess = DataAccess(self.server, self.database)
+
+        dataAccess.cursor = MagicMock()
+        dataAccess.cursor.execute.return_value = dataAccess.cursor
+
+        quote = collections.namedtuple('quote', 'Instrument IdInstrument Asof ContractDate RelativePeriod Value')
+
+        quote1 = quote('North Sea', 1961, '2020-02-01','2020-02-01', 1,100)
+        
+        dataAccess.cursor.fetchall.return_value = quote1
+        filter = {'Instrument': 'North Sea', 'ContractCode': 'B' , '>=Asof': datetime.strftime(datetime(2019, 12, 6, 0, 0, 0), "%Y%M%d")}
+
+        print(dataAccess.load('view_Quotes_Futures', **filter))
+
     def test_get_max_database_date(self):
         dataAccess = DataAccess(self.server, 'Price')
         d = {'Class':['VLCC']}
-        self.assertEqual(type(dataAccess.get_max_database_date('McQuilling', 'DateStamp', 'import', **d)), datetime.datetime)
+        self.assertEqual(type(dataAccess.get_max_database_date('McQuilling', 'DateStamp', 'import', **d)), datetime)
 
 
     def test_delete_two_parameters_one_value_each(self):
@@ -649,7 +668,7 @@ class ExcelExtractorCase(unittest.TestCase):
         i = 4
 
         self.assertEqual(
-            _get_value(t, c, i), datetime.datetime.now().strftime("%d-%m-%Y")
+            _get_value(t, c, i), datetime.now().strftime("%d-%m-%Y")
         )
 
     def test_get_value_default(self):
@@ -745,13 +764,13 @@ class ExcelExtractorCase(unittest.TestCase):
                 "column 1":1, 
                 "column 2":'a', 
                 "column 3":self.block_column3["value"], 
-                'Datestamp':datetime.datetime.now().strftime("%d-%m-%Y")
+                'Datestamp':datetime.now().strftime("%d-%m-%Y")
             },
             {
                 "column 1":2, 
                 "column 2":'b', 
                 "column 3":self.block_column3["value"], 
-                'Datestamp':datetime.datetime.now().strftime("%d-%m-%Y")
+                'Datestamp':datetime.now().strftime("%d-%m-%Y")
             }
         ]
 
@@ -770,7 +789,7 @@ class ExchangeWrapperCase(unittest.TestCase):
                 Mailbox(email_address='anne@example.com'),
                 Mailbox(email_address='bob@example.com'),
             ],
-            datetime_received=datetime.datetime(2000, 1, 1, 12, 1, 30),
+            datetime_received=datetime(2000, 1, 1, 12, 1, 30),
             cc_recipients=['carl@example.com', 'denice@example.com'],  # Simple strings work, too
             bcc_recipients=[
                 Mailbox(email_address='erik@example.com'),
@@ -792,23 +811,23 @@ class ExchangeWrapperCase(unittest.TestCase):
 
     def test_get_start_date(self):
         
-        date = datetime.datetime(2000, 1, 1, 12, 1, 30)
+        date = datetime(2000, 1, 1, 12, 1, 30)
         self.assertEqual(date.year, self.exchangeWrapper.get_start_date(date).year)
 
     def test_get_emails(self):
         with mock.patch('services.exchangeWrapper.ExchangeWrapper.get_emails') as MockClass:
             MockClass.return_value = self.m.subject
-            result = self.exchangeWrapper.get_emails('Daily motivation', datetime.datetime(2000, 1, 1, 12, 1, 30))
+            result = self.exchangeWrapper.get_emails('Daily motivation', datetime(2000, 1, 1, 12, 1, 30))
             self.assertEqual(result, self.m.subject)
 
     def test_save_email_attachments(self):
         self.exchangeWrapper.save_email_attachments((self.m,), self.file_path)
-        time_delta = datetime.datetime.now() - datetime.datetime.utcfromtimestamp(os.path.getmtime(os.path.join(self.file_path, 'my_file_20000101.txt')))
+        time_delta = datetime.now() - datetime.utcfromtimestamp(os.path.getmtime(os.path.join(self.file_path, 'my_file_20000101.txt')))
         self.assertLess(time_delta.seconds, 100000)
 
     def test_save_attachment(self):
-        self.exchangeWrapper.save_attachment(self.m.attachments[0], self.file_path, datetime.datetime(2000, 1, 1, 12, 1, 30))
-        time_delta = datetime.datetime.now() - datetime.datetime.utcfromtimestamp(os.path.getmtime(os.path.join(self.file_path, 'my_file_20000101.txt')))
+        self.exchangeWrapper.save_attachment(self.m.attachments[0], self.file_path, datetime(2000, 1, 1, 12, 1, 30))
+        time_delta = datetime.now() - datetime.utcfromtimestamp(os.path.getmtime(os.path.join(self.file_path, 'my_file_20000101.txt')))
         self.assertLess(time_delta.seconds, 100000)
 
     
@@ -822,7 +841,7 @@ class ExchangeWrapperCase(unittest.TestCase):
             time.sleep(1)
 
 def get_email_bg(q, i):
-    date = datetime.datetime(2020,2,5,12,0,0)
+    date = datetime(2020,2,5,12,0,0)
     exchangeWrapper = ExchangeWrapper()
     emails = exchangeWrapper.get_emails('ICE 1630 Oil Futures Curves', date)
     exchangeWrapper.save_email_attachments(list(emails), os.path.join('C:\Dev\Excel Files\ExchangeWrapper', 'ICE'))
@@ -842,7 +861,7 @@ class ICE_SettlementCleanerCase(unittest.TestCase):
         })
 
     def test_set_asof(self):
-        self.assertEqual(_set_asof(self.d1, datetime.datetime(2020, 1, 21, 12, 0, 0))['Asof'].iloc[0], '20200121')
+        self.assertEqual(_set_asof(self.d1, datetime(2020, 1, 21, 12, 0, 0))['Asof'].iloc[0], '20200121')
 
     def test_format_contract_column(self):
         self.assertEqual(_format_contract_column(self.d1)['ContractDate'].iloc[0], '20200301')
@@ -938,7 +957,7 @@ class IeaTxtCleanerCase(unittest.TestCase):
             'Country':pd.Series(['Aus','Ireland','UK','France','Congo'], dtype='str'),
             'Product':pd.Series(['CRUDE','NG','LNG','Stuff','Coal'], dtype='str'),
             'PeriodType':pd.Series(['Quarter','Quarter', 'Year', 'Month','Month'], dtype='str'),
-            'Asof':pd.Series([datetime.date.today(),datetime.date.today(), datetime.date.today(), datetime.date.today(),datetime.date.today()])
+            'Asof':pd.Series([date.today(),date.today(), date.today(), date.today(),date.today()])
         }
         dfOut = pd.DataFrame(data=dOut)
         dfTest = clean_iea(dfIn)
@@ -965,7 +984,7 @@ class IeaTxtCleanerCase(unittest.TestCase):
             'TIMESTAMP':pd.Series(['01/09/1994','01/09/1995','01/09/1996'], dtype='str'),
             'VALUE':pd.Series([1,2,3], dtype='str'),            
             'PeriodType':pd.Series(['Month','Year', 'Quarter'], dtype='str'),            
-            'Asof':pd.Series([datetime.date.today(),datetime.date.today(), datetime.date.today()]),
+            'Asof':pd.Series([date.today(),date.today(), date.today()]),
             'Period':pd.Series(['1994-01-09','1995-01-09','1996-01-09'], dtype='datetime64[ns]')
         }
         dfOut_newFormat = pd.DataFrame(data=dOut_newFormat)
@@ -986,6 +1005,7 @@ class LogCase(unittest.TestCase):
     def test_log(self):
         self.assertIsInstance(old_log(__name__, 'test_log', "short function name"), str)
         self.assertIsInstance(old_log(__name__, 'really_long_function_name_to_test_alignment_log', "long function name"), str)
+        self.assertIsInstance(old_log(__name__, 'really_long_function_name_to_test_alignment_log', "long function name", 'Error',True, "logCase"), str)
 
     def test_log_info(self):
         self.assertIsInstance(log.info(__name__, 'test_log', "short function name"), str)
@@ -1023,7 +1043,7 @@ class McQuillingCase(unittest.TestCase):
 
         self.assertIsNone(
             self.mcQuilling.get_attachments(
-                list(self.mcQuilling.get_emails(datetime.datetime.strptime(str(20191213), '%Y%m%d'), 'Daily Freight Rate Assessment', account)), self.mcQuilling.file_path))  
+                list(self.mcQuilling.get_emails(datetime.strptime(str(20191213), '%Y%m%d'), 'Daily Freight Rate Assessment', account)), self.mcQuilling.file_path))  
 
     # python -m unittest test_basic.McQuillingCase.test_run
     def test_run(self):
@@ -1124,7 +1144,7 @@ class UtilsCase(unittest.TestCase):
         self.assertGreater(date, 20000101)
 
     def test_insert_datestamp_in_filename(self):
-        string = insert_datestamp_in_filename('C:\Dev', 'Test.xlsx', datetime.datetime(2000, 1, 1, 12, 1, 1))
+        string = insert_datestamp_in_filename('C:\Dev', 'Test.xlsx', datetime(2000, 1, 1, 12, 1, 1))
         self.assertEqual(string, 'C:\Dev\Test_20000101.xlsx')
 
     def test_load_json(self):
@@ -1148,13 +1168,13 @@ class UtilsCase(unittest.TestCase):
 
     def test_write_to_csv(self):
         write_to_csv([{},], os.path.join(self.file_path, 'test.csv'))
-        time_delta = datetime.datetime.now() - datetime.datetime.utcfromtimestamp(os.path.getmtime(os.path.join(self.file_path, 'test.csv')))
+        time_delta = datetime.now() - datetime.utcfromtimestamp(os.path.getmtime(os.path.join(self.file_path, 'test.csv')))
         self.assertLess(time_delta.seconds, 100000)
 
     def test_files_later_than(self):
         list_string = ["no_date","date_14-Jan-17","date_16-Jan-2018","140119M2M"]
         list_string_result = ["date_16-Jan-2018","140119M2M"]
-        self.assertEqual(files_later_than(list_string, datetime.datetime(2017, 12, 1, 12, 1, 1)), list_string_result)
+        self.assertEqual(files_later_than(list_string, datetime(2017, 12, 1, 12, 1, 1)), list_string_result)
 
     def test_get_unique_values_for_dataframe_keys(self):
         df = pd.DataFrame(
@@ -1211,25 +1231,594 @@ class UtilsCase(unittest.TestCase):
         print(get_unique_values_for_dataframe_keys(df, keys))
         self.assertEqual(get_unique_values_for_dataframe_keys(df, keys), expect)
 
+
 class priceReturnsCase(unittest.TestCase):
     def setUp(self):
-        self.rows = [
-            ('ICE', 'North Sea', 'ICE', '19859', 'WAB', 'FUTURE', 'Settlement', '2019-11-06', '2019-12-01', '2019-12-27', 4, 63.39, None, None), 
-            ('ICE', 'North Sea', 'ICE', '19859', 'WAB', 'FUTURE', 'Settlement', '2019-11-07', '2019-12-01', '2019-12-27', 3, 63.28, None, None), 
-            ('ICE', 'North Sea', 'ICE', '19859', 'WAB', 'FUTURE', 'Settlement', '2019-11-08', '2020-01-01', '2020-01-03', 4, 62.54, None, None)
-        ]
+        self.maxDiff = None
+        # Data definitions
+        quote = collections.namedtuple('quote', 'IdInstrument Asof ContractDate RelativePeriod Value')
 
-    def test_calculate_returns_no_instrument(self):
-        with mock.patch('helpers.dataAccess.DataAccess.load') as MockClass:
-            MockClass.return_value = []
-            result = calculate_returns('')
-            self.assertEqual(result, [])
+        ## Quote is struct(int date date int float)
+        ## interp. a price value for an instrument on a given asof date
 
-    def test_calculate_returns_with_instrument(self):
-        with mock.patch('helpers.dataAccess.DataAccess.load') as MockClass:
-            MockClass.return_value = self.rows
-            result = calculate_returns('North Sea')
-            self.assertEqual(result, self.rows)
+        self.quote1 = quote(1961,'2020-02-01','2020-02-01', 1,100)
+        self.quote2 = quote(1961,'2020-02-01','2020-03-01', 2,110)
+        self.quote3 = quote(1961,'2020-01-31','2020-01-01', 1,90)
+        self.quote4 = quote(1961,'2020-01-31','2020-02-01', 2,80)
+        self.quote5 = quote(1962,'2020-01-31','2020-02-01', 2,80)
+        
+        self.quote6 = quote(1961,'2020-01-30','2020-02-01', 2,70)
+        self.quote7 = quote(1961,'2020-01-30','2020-02-01', 1,60)
+        self.quote8 = quote(1961,'2020-01-31','2020-03-01', 3,50)
+
+        self.quote9 = quote(1961,'2020-02-27','2020-02-01', 1,40)
+        self.quote9a = quote(1961,'2020-02-27','2020-03-01', 2,45)
+        self.quote10 = quote(1961,'2020-02-28','2020-02-01', 1,50)
+        self.quote10a = quote(1961,'2020-02-28','2020-03-01', 2,55)
+        self.quote10b = quote(1961,'2020-02-28','2020-04-01', 3,58)
+        
+        self.quote11 = quote(1961,'2020-03-02','2020-03-01', 1,60)
+        self.quote12 = quote(1961,'2020-03-02','2020-04-01', 2,70)
+        self.quote13 = quote(1961,'2020-04-02','2020-04-01', 1,80)
+        self.quote14 = quote(1961,'2020-03-31','2020-04-01', 2,85)
+        self.quote14a = quote(1961,'2020-03-31','2020-05-01', 3,85)
+        self.quote15 = quote(1961,'2020-04-01','2020-05-01', 2,90)
+
+        def fn_for_quote(q):
+            q.Instrument        # str
+            q.IdInstrument      # int
+            q.Asof              # date
+            q.ContractDate      # date
+            q.RelativePeriod    # int
+            q.Value             # float
+
+        
+        ## ListOfQuote is one of:
+        ## - empty
+        ## - list(Quote)
+        ## interp. a list of Quotes
+
+        self.loq0 = []
+        self.loq1 = [self.quote1]
+        self.loq2 = [self.quote3,self.quote4,self.quote1,self.quote2]
+
+        def fn_for_loq(loq):
+            if(loq == []):
+                return []
+            else:
+                first = loq[0]
+                rest = loq[1:]
+                fn_for_quote(first)
+                fn_for_loq(rest) 
+
+
+        expiry = collections.namedtuple('expiry', 'Instrument Contract ExpiryDate')
+
+        ## expiry is struct(str date date) | False
+        ## interp. the expiry date for a given instrument and contract
+
+        self.expiry0 = False
+        self.expiry1 = expiry('North Sea','2020-01-01','2020-01-31')
+        self.expiry2 = expiry('North Sea','2020-02-01','2020-02-28')
+        self.expiry3 = expiry('North Sea','2020-03-01','2020-03-31')
+
+        def fn_for_expiry(e):
+            if(e is False):
+                return False
+            else:            
+                e.Instrument    # str
+                e.Contract      # date
+                e.ExpiryDate       # date
+
+        ## ListOfExpiry is one of:
+        ## - None
+        ## - list(Expiry)
+        ## interp. a list of Expiries
+
+        self.loe0 = []
+        self.loe1 = [self.expiry1,self.expiry2,self.expiry3]
+        self.loe2 = [self.expiry3,self.expiry2,self.expiry1]
+        self.loe3 = [self.expiry2,self.expiry3,self.expiry1]
+
+        def fn_for_loe(loe):
+            if(loe == []):
+                return False
+            else:
+                # do something with...
+                first = loe[0]
+                rest = loe[1:]
+                fn_for_expiry(first)
+                fn_for_loe(rest) 
+
+        ## Value is {str date int float}
+        ## interp: a value on a curve
+
+        self.value1 = {
+            'Instrument': self.quote1.IdInstrument,
+            'Asof': self.quote1.Asof,                    
+            'M': 1,
+            'Value': self.quote1.Value
+        }
+
+        self.value2 = {
+            'Instrument': self.quote2.IdInstrument,
+            'Asof': self.quote2.Asof,                    
+            'M': 2,
+            'Value': self.quote2.Value
+        }
+
+        self.value3 = {
+            'Instrument': self.quote3.IdInstrument,
+            'Asof': self.quote3.Asof,                    
+            'M': 1,
+            'Value': self.quote3.Value
+        }
+
+
+        self.value4 = {
+            'Instrument': self.quote4.IdInstrument,
+            'Asof': self.quote4.Asof,                    
+            'M': 2,
+            'Value': self.quote4.Value
+        }
+
+        
+
+        self.value7 = {
+            'Instrument': self.quote7.IdInstrument,
+            'Asof': self.quote7.Asof,                    
+            'M': 1,
+            'Value': self.quote7.Value
+        }
+
+        self.value8 = {
+            'Instrument': self.quote8.IdInstrument,
+            'Asof': self.quote8.Asof,                    
+            'M': 3,
+            'Value': self.quote8.Value
+        }
+
+        self.value9a = {
+            'Instrument': self.quote9a.IdInstrument,
+            'Asof': self.quote9a.Asof,                    
+            'M': 2,
+            'Value': self.quote9a.Value
+        }
+
+        self.value9 = {
+            'Instrument': self.quote9.IdInstrument,
+            'Asof': self.quote9.Asof,                    
+            'M': 1,
+            'Value': self.quote9.Value
+        }
+
+        self.value10a = {
+            'Instrument': self.quote10a.IdInstrument,
+            'Asof': self.quote10a.Asof,                    
+            'M': 2,
+            'Value': self.quote10a.Value
+        }
+
+        
+        self.value10b = {
+            'Instrument': self.quote10b.IdInstrument,
+            'Asof': self.quote10b.Asof,                    
+            'M': 3,
+            'Value': self.quote10b.Value
+        }
+
+        self.value10 = {
+            'Instrument': self.quote10.IdInstrument,
+            'Asof': self.quote10.Asof,                    
+            'M': 1,
+            'Value': self.quote10.Value
+        }
+
+        self.value11 = {
+            'Instrument': self.quote11.IdInstrument,
+            'Asof': self.quote11.Asof,                    
+            'M': 1,
+            'Value': self.quote11.Value
+        }
+
+        self.value12 = {
+            'Instrument': self.quote12.IdInstrument,
+            'Asof': self.quote12.Asof,                    
+            'M': 2,
+            'Value': self.quote12.Value
+        }
+
+        self.value13 = {
+            'Instrument': self.quote13.IdInstrument,
+            'Asof': self.quote13.Asof,                    
+            'M': 1,
+            'Value': self.quote13.Value
+        }
+
+        self.value14 = {
+            'Instrument': self.quote14.IdInstrument,
+            'Asof': self.quote14.Asof,                    
+            'M': 2,
+            'Value': self.quote14.Value
+        }
+
+        self.value14a = {
+            'Instrument': self.quote14a.IdInstrument,
+            'Asof': self.quote14a.Asof,                    
+            'M': 3,
+            'Value': self.quote14a.Value
+        }
+
+        self.value15 = {
+            'Instrument': self.quote15.IdInstrument,
+            'Asof': self.quote15.Asof,                    
+            'M': 2,
+            'Value': self.quote15.Value
+        }
+
+        ## ListValues is one of    
+        ## - None
+        ## - list(Value)
+        ## interp. a list of Values
+
+        self.lov0 = []
+        self.lov1 = [self.value4, self.value1]
+        self.lov2 = [self.value4, self.value1]
+
+        def fn_for_lov(lov):
+            if(lov == []):
+                return []
+            else:
+                # do something with...
+                first = lov[0]
+                rest = lov[1:]
+                fn_for_expiry(first)
+                fn_for_lov(rest) 
+
+    # TESTS     
+    def test_log_returns_1(self):
+        self.assertEqual(log_returns(1, 1), 0)
+
+    def test_log_returns_2(self):
+        v1 = 1
+        v2 = 1.1
+        self.assertEqual(log_returns(v1, v2), self.calc_returns(v1, v2))
+
+    def test_get_continuation_curves_base_case(self):
+        self.assertEqual(get_continuation_curves(self.loq0), [])
+    
+    def test_get_continuation_curves_simple_case(self): 
+        self.assertEqual(get_continuation_curves(self.loq2), 
+            [
+                [              
+                    {
+                        'Instrument': self.quote3.IdInstrument,
+                        'Asof': self.quote3.Asof,                    
+                        'M': 1,
+                        'Value': self.quote3.Value
+                    },{
+                        'Instrument': self.quote1.IdInstrument,
+                        'Asof': self.quote1.Asof,                    
+                        'M': 1,
+                        'Value': self.quote1.Value
+                    }
+                    
+                ],
+                [  
+                    {
+                        'Instrument': self.quote4.IdInstrument,
+                        'Asof': self.quote4.Asof,                    
+                        'M': 2,
+                        'Value': self.quote4.Value
+                    },
+                    {
+                        'Instrument': self.quote2.IdInstrument,
+                        'Asof': self.quote2.Asof,                    
+                        'M': 2,
+                        'Value': self.quote2.Value
+                    }                    
+                ]
+            ]
+        )
+
+    def test_get_continuation_curve_empty(self):
+        self.assertEqual(get_continuation_curve(1, self.loq0), [])
+
+    def test_get_continuation_curve_first(self):
+        
+        self.assertEqual(get_continuation_curve(1, self.loq2), 
+            [
+                 {
+                    'Instrument': self.quote3.IdInstrument,
+                    'Asof': self.quote3.Asof,                    
+                    'M': 1,
+                    'Value': self.quote3.Value
+
+                },
+                {
+                    'Instrument': self.quote1.IdInstrument,
+                    'Asof': self.quote1.Asof,                    
+                    'M': 1,
+                    'Value': self.quote1.Value
+                }
+            ]
+        )
+
+    def test_get_continuation_curve_second(self):
+        self.assertEqual(get_continuation_curve(2, self.loq2), 
+            [
+                {
+                    'Instrument': self.quote4.IdInstrument,
+                    'Asof': self.quote4.Asof,                    
+                    'M': 2,
+                    'Value': self.quote4.Value
+                },
+                {
+                    'Instrument': self.quote2.IdInstrument,
+                    'Asof': self.quote2.Asof,                    
+                    'M': 2,
+                    'Value': self.quote2.Value
+                }
+            ]
+        )
+
+    def test_is_series_quote_1(self):
+        self.assertEqual(is_series_quote(1, self.quote1), True)
+
+    def test_is_series_quote_2(self):
+        self.assertEqual(is_series_quote(2, self.quote2), True)
+
+    def test_is_series_quote_3(self):
+        self.assertEqual(is_series_quote(1, self.quote3), True)
+
+    def test_is_series_quote_4(self):
+        self.assertEqual(is_series_quote(2, self.quote4), True)
+
+    def test_get_as_series_item(self):
+        self.assertEqual(get_as_series_item(1, self.quote1), [
+                {
+                    'Instrument': self.quote1.IdInstrument,
+                    'Asof': self.quote1.Asof,                    
+                    'M': 1,
+                    'Value': self.quote1.Value
+                }
+            ]
+        )
+
+    def test_get_expiry_quotes_base_case(self):
+        self.assertEqual(get_expiry_quotes(self.lov0, self.loe0), [])
+
+    # self.quote9 = quote(1961,'2020-02-27','2020-02-01', 1,40)
+    # self.quote9a = quote(1961,'2020-02-27','2020-03-01', 2,45)
+    # self.quote10 = quote(1961,'2020-02-28','2020-02-01', 1,50)
+    # self.quote10a = quote(1961,'2020-02-28','2020-03-01', 2,55)
+    # self.quote11 = quote(1961,'2020-03-02','2020-03-01', 1,60)
+    # self.quote12 = quote(1961,'2020-03-02','2020-04-01', 2,70)
+    # self.quote13 = quote(1961,'2020-04-02','2020-04-01', 1,80)
+
+    def calc_returns(self, v1, v2):
+        #return numpy.log(v1/v2)
+        return v1 - v2
+
+    def test_get_expiry_quotes_julians_case(self):
+        self.assertEqual(get_expiry_quotes([self.value11,self.value10a], self.loe1), [self.value10a])   
+
+    # self.quote9 = quote(1961,'2020-02-27','2020-02-01', 1,40)
+    # self.quote9a = quote(1961,'2020-02-27','2020-03-01', 2,45)
+    # self.quote10 = quote(1961,'2020-02-28','2020-02-01', 1,50)
+    # self.quote10a = quote(1961,'2020-02-28','2020-03-01', 2,55)
+    # self.quote11 = quote(1961,'2020-03-02','2020-03-01', 1,60)
+    # self.quote12 = quote(1961,'2020-03-02','2020-04-01', 2,70)
+    # self.quote13 = quote(1961,'2020-04-02','2020-04-01', 1,80)
+    # self.quote14 = quote(1961,'2020-03-31','2020-04-01', 2,85)
+    # self.quote14a = quote(1961,'2020-03-31','2020-05-01', 3,85)
+    # self.quote15 = quote(1961,'2020-04-01','2020-05-01', 2,90)
+
+    def test_get_returns_for_curve_day_of_expiry_no_shift(self):
+        self.assertEqual(get_returns_for_curve([self.value10,self.value9], [self.value10a]),
+            [
+                {
+                    'Instrument': self.quote10.IdInstrument,
+                    'Asof': self.quote10.Asof,                    
+                    'M': 1,
+                    'Value': self.calc_returns(self.quote10.Value, self.quote9.Value)
+                } ,
+                {
+                    'Instrument': self.quote9.IdInstrument,
+                    'Asof': self.quote9.Asof,                    
+                    'M': 1,
+                    'Value': self.calc_returns(self.quote9.Value, 1)
+                }                
+            ]
+        )
+
+    # self.quote9 = quote(1961,'2020-02-27','2020-02-01', 1,40)
+    # self.quote9a = quote(1961,'2020-02-27','2020-03-01', 2,45)
+    # self.quote10 = quote(1961,'2020-02-28','2020-02-01', 1,50)
+    # self.quote10a = quote(1961,'2020-02-28','2020-03-01', 2,55)
+    # self.quote11 = quote(1961,'2020-03-02','2020-03-01', 1,60)
+    # self.quote12 = quote(1961,'2020-03-02','2020-04-01', 2,70)
+    # self.quote13 = quote(1961,'2020-04-02','2020-04-01', 1,80)
+    # self.quote14 = quote(1961,'2020-03-31','2020-04-01', 2,85)
+    # self.quote14a = quote(1961,'2020-03-31','2020-05-01', 3,85)
+    # self.quote15 = quote(1961,'2020-04-01','2020-05-01', 2,90)
+
+    def test_get_returns_for_curve_day_after_expiry_shift(self):
+        self.assertEqual(get_returns_for_curve([self.value11,self.value10], [self.value10a]),
+            [
+                {
+                    'Instrument': self.quote11.IdInstrument,
+                    'Asof': self.quote11.Asof,                    
+                    'M': 1,
+                    'Value': self.calc_returns(self.quote11.Value, self.quote10a.Value)
+                } ,
+                {
+                    'Instrument': self.quote10.IdInstrument,
+                    'Asof': self.quote10.Asof,                    
+                    'M': 1,
+                    'Value': self.calc_returns(self.quote10.Value, 1)
+                }                
+            ]
+        )
+
+    # self.quote9 = quote(1961,'2020-02-27','2020-02-01', 1,40)
+    # self.quote9a = quote(1961,'2020-02-27','2020-03-01', 2,45)
+    # self.quote10 = quote(1961,'2020-02-28','2020-02-01', 1,50)
+    # self.quote10a = quote(1961,'2020-02-28','2020-03-01', 2,55)
+    # self.quote11 = quote(1961,'2020-03-02','2020-03-01', 1,60)
+    # self.quote12 = quote(1961,'2020-03-02','2020-04-01', 2,70)
+    # self.quote13 = quote(1961,'2020-04-02','2020-04-01', 1,80)
+    # self.quote14 = quote(1961,'2020-03-31','2020-04-01', 2,85)
+    # self.quote14a = quote(1961,'2020-03-31','2020-05-01', 3,85)
+    # self.quote15 = quote(1961,'2020-04-01','2020-05-01', 2,90)
+
+    def test_get_returns_for_curve_two_days_after_expiry_no_shift(self):
+        self.assertEqual(get_returns_for_curve([self.value13,self.value11], [self.value10a]),
+            [
+                {
+                    'Instrument': self.quote13.IdInstrument,
+                    'Asof': self.quote13.Asof,                    
+                    'M': 1,
+                    'Value': self.calc_returns(self.quote13.Value, self.quote11.Value)
+                } ,
+                {
+                    'Instrument': self.quote11.IdInstrument,
+                    'Asof': self.quote11.Asof,                    
+                    'M': 1,
+                    'Value': self.calc_returns(self.quote11.Value, 1)
+                }                
+            ]
+        )
+
+    # self.quote9 = quote(1961,'2020-02-27','2020-02-01', 1,40)
+    # self.quote9a = quote(1961,'2020-02-27','2020-03-01', 2,45)
+    # self.quote10 = quote(1961,'2020-02-28','2020-02-01', 1,50)
+    # self.quote10a = quote(1961,'2020-02-28','2020-03-01', 2,55)
+    # self.quote11 = quote(1961,'2020-03-02','2020-03-01', 1,60)
+    # self.quote12 = quote(1961,'2020-03-02','2020-04-01', 2,70)
+    # self.quote13 = quote(1961,'2020-04-02','2020-04-01', 1,80)
+    # self.quote14 = quote(1961,'2020-03-31','2020-04-01', 2,85)
+    # self.quote14a = quote(1961,'2020-03-31','2020-05-01', 3,85)
+    # self.quote15 = quote(1961,'2020-04-01','2020-05-01', 2,90)
+
+    def test_get_returns_for_curve_day_of_expiry_m2_shift(self):
+        self.assertEqual(get_returns_for_curve([self.value15,self.value14], [self.value14a]),
+            [
+                {
+                    'Instrument': self.quote15.IdInstrument,
+                    'Asof': self.quote15.Asof,                    
+                    'M': 2,
+                    'Value': self.calc_returns(self.quote15.Value, self.quote14a.Value)
+                } ,
+                {
+                    'Instrument': self.quote14.IdInstrument,
+                    'Asof': self.quote14.Asof,                    
+                    'M': 2,
+                    'Value': self.calc_returns(self.quote14.Value, 1)
+                }                
+            ]
+        )
+
+    # self.quote9 = quote(1961,'2020-02-27','2020-02-01', 1,40)
+    # self.quote9a = quote(1961,'2020-02-27','2020-03-01', 2,45)
+    # self.quote10 = quote(1961,'2020-02-28','2020-02-01', 1,50)
+    # self.quote10a = quote(1961,'2020-02-28','2020-03-01', 2,55)
+    # self.quote10b = quote(1961,'2020-02-28','2020-04-01', 3,58)
+    # self.quote11 = quote(1961,'2020-03-02','2020-03-01', 1,60)
+    # self.quote12 = quote(1961,'2020-03-02','2020-04-01', 2,70)
+    # self.quote13 = quote(1961,'2020-04-02','2020-04-01', 1,80)
+    # self.quote14 = quote(1961,'2020-03-31','2020-04-01', 2,85)
+    # self.quote14a = quote(1961,'2020-03-31','2020-05-01', 3,85)
+    # self.quote15 = quote(1961,'2020-04-01','2020-05-01', 2,90)
+
+    def test_get_returns_for_curve_day_of_expiry_m2_day_of_expiry_no_shift(self):
+        self.assertEqual(get_returns_for_curve([self.value10a,self.value9a], [self.value10b]),
+            [
+                {
+                    'Instrument': self.quote10a.IdInstrument,
+                    'Asof': self.quote10a.Asof,                    
+                    'M': 2,
+                    'Value': self.calc_returns(self.quote10a.Value, self.quote9a.Value)
+                } ,
+                {
+                    'Instrument': self.quote9a.IdInstrument,
+                    'Asof': self.quote9a.Asof,                    
+                    'M': 2,
+                    'Value': self.calc_returns(self.quote9a.Value, 1)
+                }                
+            ]
+        )
+
+    def test_get_returns_for_curves_julians_case(self):
+        # self.quote9 = quote(1961,'2020-02-27','2020-02-01', 1,40)
+        # self.quote9a = quote(1961,'2020-02-27','2020-03-01', 2,45)
+        # self.quote10 = quote(1961,'2020-02-28','2020-02-01', 1,50)
+        # self.quote10a = quote(1961,'2020-02-28','2020-03-01', 2,55)
+        # self.quote10b = quote(1961,'2020-02-28','2020-04-01', 3,58)
+        # self.quote11 = quote(1961,'2020-03-02','2020-03-01', 1,60)
+        # self.quote12 = quote(1961,'2020-03-02','2020-04-01', 2,70)
+        # self.quote13 = quote(1961,'2020-04-02','2020-04-01', 1,80)
+        # self.quote14 = quote(1961,'2020-03-31','2020-04-01', 2,85)
+        # self.quote14a = quote(1961,'2020-03-31','2020-05-01', 3,85)
+        # self.quote15 = quote(1961,'2020-04-01','2020-05-01', 2,90)
+        self.assertEqual(get_returns_for_curves([self.quote13, self.quote12, self.quote11, self.quote10b, self.quote10, self.quote10a, self.quote9a], [self.expiry1, self.expiry2, self.expiry3]),
+            [
+                [
+                    {
+                        'Instrument': self.quote13.IdInstrument,
+                        'Asof': self.quote13.Asof,                    
+                        'M': 1,
+                        'Value': self.calc_returns(self.quote13.Value, self.quote11.Value),
+                    },{
+                        'Instrument': self.quote11.IdInstrument,
+                        'Asof': self.quote11.Asof,                    
+                        'M': 1,
+                        'Value':self.calc_returns(self.quote11.Value, self.quote10a.Value) 
+                    },
+                    {
+                        'Instrument': self.quote10.IdInstrument,
+                        'Asof': self.quote10.Asof,                    
+                        'M': 1,
+                        'Value': self.calc_returns(self.quote10.Value, 1) 
+                    }
+                ],
+                [
+                     {
+                        'Instrument': self.quote12.IdInstrument,
+                        'Asof': self.quote12.Asof,                    
+                        'M': 2,
+                        'Value': self.calc_returns(self.quote12.Value, self.quote10b.Value) 
+                    },
+                    {
+                        'Instrument': self.quote10a.IdInstrument,
+                        'Asof': self.quote10a.Asof,                    
+                        'M': 2,
+                        'Value': self.calc_returns(self.quote10a.Value, self.quote9a.Value) 
+                    },
+                    {
+                        'Instrument': self.quote9a.IdInstrument,
+                        'Asof': self.quote9a.Asof,                    
+                        'M': 2,
+                        'Value': self.calc_returns(self.quote9a.Value, 1) 
+                    }
+                ],
+                [
+                     {
+                        'Instrument': self.quote10b.IdInstrument,
+                        'Asof': self.quote10b.Asof,                    
+                        'M': 3,
+                        'Value': self.calc_returns(self.quote10b.Value, 1) 
+                    }
+                ]
+            ]
+        )
+
+
+    
+    
+   
+
+
 
 
     
