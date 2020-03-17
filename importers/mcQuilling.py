@@ -124,9 +124,10 @@ class McQuilling(object):
 
         list_dicts = []
 
-        try:
+        
 
-            for filename in file_list:
+        for filename in file_list:
+            try:
 
                 file_name = os.path.join(os.path.join(self.file_path,"Attachments"), filename)
 
@@ -175,10 +176,11 @@ class McQuilling(object):
                                                     row_dict[config_column["ours"]] = config_column["value"]
 
                                         list_dicts.append(row_dict)
-            cnxn.close()     
+            except Exception as e:
+                log(__name__, 'run', "Error: " + str(e), level="Error")
+        cnxn.close()     
 
-        except Exception as e:
-            log(__name__, 'run', "Error: " + str(e), level="Error")
+        
         return list_dicts
         
 
@@ -196,8 +198,8 @@ class McQuilling(object):
 if(__name__ == "__main__"):
     mcQ = McQuilling(
         'Daily Freight Rate Assessment',
-        "{}\\McQuilling\\Attachments".format(os.environ['ADUB_Import_Path']),
+        "{}\\McQuilling".format(os.environ['ADUB_Import_Path']),
         database_server=os.environ['ADUB_DBServer'],
         database='Price'
     )
-    mcQ.run(USERNAME, PASSWORD, EXCHANGE_SERVER, ANALYTICS_EMAIL_ADDRESS)
+    mcQ.run()
