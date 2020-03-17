@@ -172,8 +172,6 @@ def generate_returns():
 
         combined_result = []
         for tenor in result:
-            for d in tenor:
-                del d['Value']
             combined_result.extend(tenor[:-1])
 
         if(len(combined_result) > 0):
