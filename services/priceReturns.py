@@ -174,7 +174,7 @@ def generate_returns():
         returns_filter = {'IdInstrument': [i.Id]}
         most_recent_returns = dtAccss.get_max_database_date('view_Returns', 'Asof', 'dbo', **returns_filter)
 
-        quotes_filter = {'IdInstrument': i.Id, '>Asof': datetime.strftime(most_recent_returns, "%Y-%m-%d")} 
+        quotes_filter = {'IdInstrument': i.Id, '>=Asof': datetime.strftime(most_recent_returns, "%Y-%m-%d")} 
         quotes = dtAccss.load('view_Quotes_Futures', **quotes_filter)
         quotes.reverse()
 

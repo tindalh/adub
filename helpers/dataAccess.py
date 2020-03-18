@@ -23,14 +23,15 @@ class DataAccess(object):
             else:
                 sql += " AND "
                 
-            if(key[:1] == ">"):
-                sql += f"{key[1:]} > ?"
-            elif(key[:1] == "<"):
-                sql += f"{key[1:]} < ?"
-            elif(key[:2] == ">="):
+            
+            if(key[:2] == ">="):
                 sql += f"{key[2:]} >= ?"
             elif(key[:2] == "<="):
                 sql += f"{key[2:]} <= ?"
+            elif(key[:1] == ">"):
+                sql += f"{key[1:]} > ?"
+            elif(key[:1] == "<"):
+                sql += f"{key[1:]} < ?"            
             else:
                 sql += f"{key} = ?"
             params += {kwargs[key]}
