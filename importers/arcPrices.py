@@ -182,6 +182,8 @@ def run_daily_prices():
             env = 'test'
         elif('pc53' in os.environ['ADUB_DBServer'].lower()):
             env = 'dev'
+        elif('desktop' in os.environ['ADUB_DBServer'].lower()):
+            env = 'dev'
 
         log(__name__, 'run_daily_prices', f"Running import of prices in {env}")
         
@@ -202,7 +204,7 @@ def run_daily_prices():
 
         log(__name__, 'run_daily_prices', f"Finished generating returns")
     except Exception as e:
-        log(__name__, 'run_daily_prices', f"Arc Price Importer has failed: {str(e)}", level="Error", email=True, emailSubject=self.name)
+        log(__name__, 'run_daily_prices', f"Arc Price Importer has failed: {str(e)}", level="Error", email=True, emailSubject='Arc Price Importer')
 
 
 if(__name__ == "__main__"):

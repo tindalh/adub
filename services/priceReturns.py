@@ -9,7 +9,7 @@ from datetime import datetime
 ## ListOfQuotes ListOfExpiries-> list (list(dicts)) 
 ## Given a list of quotes, produce the returns curve per tenor
 
-def get_returns_for_curves(loq, loe):
+def get_returns_for_curves(loq, loe, is_double_proxy=False):
     """
         ListOfQuotes ListOfExpiries-> list (list(dicts)) 
         Given a list of quotes, produce the returns curve per tenor
@@ -19,11 +19,15 @@ def get_returns_for_curves(loq, loe):
 
     for i in range(len(curves)):
         m1 = curves[i]
+        m2 = None
         shifted_expiry_quotes = []
         if(len(curves) > i + 1):
             shifted_expiry_quotes = get_expiry_quotes(curves[i + 1], loe) 
 
-        result.append(get_returns_for_curve(m1, shifted_expiry_quotes))
+            if(is_double_proxy):
+                m2 = curves[i+1]
+
+        result.append(get_returns_for_curve(m1, shifted_expiry_quotes, m2, is_double_proxy))
         
     return result
 
@@ -37,7 +41,7 @@ def get_returns_for_curves(loq, loe):
 
 # <templated from list(Value), added list(Value) parameter>
 
-def get_returns_for_curve(m1, m2):
+def get_returns_for_curve(m1, shifted_expiry_quotes, m2=[], is_double_proxy=False):
     list_returns = []
     for i in range(len(m1)):
         
@@ -46,14 +50,23 @@ def get_returns_for_curve(m1, m2):
             "Asof":''
         }
 
-        if(len(m1) > i + 1): # 2 Try to use the previous days quote
-            previous = m1[i + 1]
+        current = m1[i]["Value"]
 
-        for v in m2: 
+        if(len(m1) > i + 1): # 2 Try to use the previous days quote
+            previous = m1[i + 1]            
+
+        for v in shifted_expiry_quotes: 
             if(previous["Asof"] == v["Asof"]): # 3 Try to use the shifted quote
                 previous = v
 
-        m1[i]["Value"] = log_returns(m1[i]["Value"], previous["Value"])
+                if(is_double_proxy):
+                    for q in m2:
+                        if(q["Asof"] == m1[i]["Asof"]):
+                            current = q["Value"]
+                
+
+        m1[i]["Value"] = log_returns(current, previous["Value"])
+        
         list_returns.append(m1[i])
     
     return list_returns

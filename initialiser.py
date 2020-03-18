@@ -75,8 +75,8 @@ class Initialiser(object):
 
     def startArcPricesScheduler(self):       
 
-        #scheduler = schedule.every(1).minutes.do(run_daily_prices).scheduler
-        scheduler = schedule.every().day.at("06:00").do(run_daily_prices).scheduler
+        scheduler = schedule.every(5).minutes.do(run_daily_prices).scheduler
+        #scheduler = schedule.every().day.at("06:00").do(run_daily_prices).scheduler
         eiaScheduler = jobSchdlr.JobScheduler('Price Import', scheduler)
         eiaScheduler.schedule()  
 

@@ -1672,6 +1672,36 @@ class priceReturnsCase(unittest.TestCase):
     # self.quote14a = quote(1961,'2020-03-31','2020-05-01', 3,85)
     # self.quote15 = quote(1961,'2020-04-01','2020-05-01', 2,90)
 
+    def test_get_returns_for_curve_day_after_expiry_double_proxy_shift(self):
+        self.assertEqual(get_returns_for_curve([self.value11,self.value10], [self.value10a], \
+            [self.value12,self.value10a], is_double_proxy=True),
+            [
+                {
+                    'Instrument': self.quote11.IdInstrument,
+                    'Asof': self.quote11.Asof,                    
+                    'M': 1,
+                    'Value': self.calc_returns(self.quote12.Value, self.quote10a.Value)
+                } ,
+                {
+                    'Instrument': self.quote10.IdInstrument,
+                    'Asof': self.quote10.Asof,                    
+                    'M': 1,
+                    'Value': self.calc_returns(self.quote10.Value, 1)
+                }                
+            ]
+        )
+
+    # self.quote9 = quote(1961,'2020-02-27','2020-02-01', 1,40)
+    # self.quote9a = quote(1961,'2020-02-27','2020-03-01', 2,45)
+    # self.quote10 = quote(1961,'2020-02-28','2020-02-01', 1,50)
+    # self.quote10a = quote(1961,'2020-02-28','2020-03-01', 2,55)
+    # self.quote11 = quote(1961,'2020-03-02','2020-03-01', 1,60)
+    # self.quote12 = quote(1961,'2020-03-02','2020-04-01', 2,70)
+    # self.quote13 = quote(1961,'2020-04-02','2020-04-01', 1,80)
+    # self.quote14 = quote(1961,'2020-03-31','2020-04-01', 2,85)
+    # self.quote14a = quote(1961,'2020-03-31','2020-05-01', 3,85)
+    # self.quote15 = quote(1961,'2020-04-01','2020-05-01', 2,90)
+
     def test_get_returns_for_curve_two_days_after_expiry_no_shift(self):
         self.assertEqual(get_returns_for_curve([self.value13,self.value11], [self.value10a]),
             [
