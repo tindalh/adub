@@ -43,6 +43,10 @@ current_table_names = [
     {
         "Source": "TEMP_LANDED_MFL_L2_CME_2",
         "Target": "Nymex_L2_2_Current"
+    },
+    {
+        "Source": "TEMP_LANDED_MFL_L4_PLT_1",
+        "Target": "Platts_L4_1_Current"
     }
 ]
 
@@ -78,6 +82,10 @@ history_table_names = [
     {
         "Source": "WRK_VAULT_MFL_L2_CME_2",
         "Target": "Nymex_L2_2_History"
+    },
+    {
+        "Source": "WRK_VAULT_MFL_L4_PLT_1",
+        "Target": "Platts_L4_1_History"
     }
 ]
 

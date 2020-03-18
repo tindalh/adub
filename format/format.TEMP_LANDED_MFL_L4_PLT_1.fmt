@@ -1,0 +1,25 @@
+14.0
+23
+1       SQLCHAR             0       20      ""       1     LOAD_GROUP_COMPANY                       SQL_Latin1_General_CP1_CI_AS
+2       SQLCHAR             0       30      ""       2     LOAD_SYSDATE                             ""
+3       SQLCHAR             0       10      ""       3     LOAD_DATE                                SQL_Latin1_General_CP1_CI_AS
+4       SQLCHAR             0       12      ""       4     LOAD_ID                                  ""
+5       SQLCHAR             0       50      ""       5     DATE                                     SQL_Latin1_General_CP1_CI_AS
+6       SQLCHAR             0       50      ""       6     DATE_STD                                 SQL_Latin1_General_CP1_CI_AS
+7       SQLCHAR             0       1       ""       7     DATE_IND                                 SQL_Latin1_General_CP1_CI_AS
+8       SQLCHAR             0       5       ""       8     CATEGORY                                 SQL_Latin1_General_CP1_CI_AS
+9       SQLCHAR             0       1       ""       9     EST_IND                                  SQL_Latin1_General_CP1_CI_AS
+10      SQLCHAR             0       1       ""       10    MST_IND                                  SQL_Latin1_General_CP1_CI_AS
+11      SQLCHAR             0       1       ""       11    ELO_IND                                  SQL_Latin1_General_CP1_CI_AS
+12      SQLCHAR             0       1       ""       12    LDS_IND                                  SQL_Latin1_General_CP1_CI_AS
+13      SQLCHAR             0       50      ""       13    CODE                                     SQL_Latin1_General_CP1_CI_AS
+14      SQLCHAR             0       15      ""       14    CODE_BASE                                SQL_Latin1_General_CP1_CI_AS
+15      SQLCHAR             0       15      ""       15    CODE_TYPE                                SQL_Latin1_General_CP1_CI_AS
+16      SQLCHAR             0       12      ""       16    REF_KEY                                  ""
+17      SQLCHAR             0       50      ""       17    TRD_PRD                                  SQL_Latin1_General_CP1_CI_AS
+18      SQLCHAR             0       1       ""       18    TCODE                                    SQL_Latin1_General_CP1_CI_AS
+19      SQLCHAR             0       8       ""       19    SYMBOLBATE                               SQL_Latin1_General_CP1_CI_AS
+20      SQLCHAR             0       15      ""       20    ASSESSMENT                               SQL_Latin1_General_CP1_CI_AS
+21      SQLCHAR             0       15      ""       21    ASSESSMENT2                              SQL_Latin1_General_CP1_CI_AS
+22      SQLCHAR             0       41      ""       22    VALUE                                    ""
+23      SQLCHAR             0       30      "\r\n"   23    LAST_UPDATED_DT                          ""
