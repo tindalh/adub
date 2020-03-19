@@ -206,6 +206,7 @@ def run_daily_prices():
         dta_accss = DataAccess(os.environ['ADUB_DBServer'], 'Price')
         dta_accss.executeStoredProcedure('sp_load_ice_prices_current')
         dta_accss.executeStoredProcedure('sp_load_nymex_prices_current')
+        dta_accss.executeStoredProcedure('sp_load_platts_prices_current')
         log(__name__, 'run_daily_prices', f"Finished stored proc")
 
         generate_returns()
@@ -234,5 +235,6 @@ if(__name__ == "__main__"):
     dta_accss = DataAccess(os.environ['ADUB_DBServer'], 'Price')
     dta_accss.executeStoredProcedure('sp_load_ice_prices_current')
     dta_accss.executeStoredProcedure('sp_load_nymex_prices_current')
+    dta_accss.executeStoredProcedure('sp_load_platts_prices_current')
 
     generate_returns()
