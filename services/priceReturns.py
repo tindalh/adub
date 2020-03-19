@@ -181,7 +181,7 @@ def generate_returns():
         expiries_filter = {'IdInstrument': i.Id}
         expiries = dtAccss.load('Expiry', **expiries_filter)
 
-        result = get_returns_for_curves(quotes, expiries)
+        result = get_returns_for_curves(quotes, expiries, i.IsDoubleProxyRoll)
 
         combined_result = []
         for tenor in result:

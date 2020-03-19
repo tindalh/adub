@@ -1,5 +1,6 @@
 from exchangelib import FileAttachment, FaultTolerance, Configuration, Credentials, Account, DELEGATE, EWSDateTime
 import datetime
+import time
 import sys
 sys.path.append('..')
 from helpers.utils import insert_datestamp_in_filename
@@ -35,7 +36,7 @@ class ExchangeWrapper:
             rest = emails[1:]
 
             self.save_attachments(first.attachments, file_path, first.datetime_received)
-
+            time.sleep(3)
             self.save_email_attachments(rest, file_path)
 
     # List of exchangelib.FileAttachment String Date -> None
