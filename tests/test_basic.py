@@ -1241,28 +1241,28 @@ class priceReturnsCase(unittest.TestCase):
         ## Quote is struct(int date date int float)
         ## interp. a price value for an instrument on a given asof date
 
-        self.quote1 = quote(1961,'2020-02-01','2020-02-01', 1,100)
-        self.quote2 = quote(1961,'2020-02-01','2020-03-01', 2,110)
-        self.quote3 = quote(1961,'2020-01-31','2020-01-01', 1,90)
-        self.quote4 = quote(1961,'2020-01-31','2020-02-01', 2,80)
-        self.quote5 = quote(1962,'2020-01-31','2020-02-01', 2,80)
+        self.quote1 = quote(1961,'2020-02-01','2020-02-01', 1,100.5)
+        self.quote2 = quote(1961,'2020-02-01','2020-03-01', 2,110.7)
+        self.quote3 = quote(1961,'2020-01-31','2020-01-01', 1,90.3)
+        self.quote4 = quote(1961,'2020-01-31','2020-02-01', 2,80.2)
+        self.quote5 = quote(1962,'2020-01-31','2020-02-01', 2,80.1)
         
-        self.quote6 = quote(1961,'2020-01-30','2020-02-01', 2,70)
-        self.quote7 = quote(1961,'2020-01-30','2020-02-01', 1,60)
-        self.quote8 = quote(1961,'2020-01-31','2020-03-01', 3,50)
+        self.quote6 = quote(1961,'2020-01-30','2020-02-01', 2,70.8)
+        self.quote7 = quote(1961,'2020-01-30','2020-02-01', 1,60.7)
+        self.quote8 = quote(1961,'2020-01-31','2020-03-01', 3,50.9)
 
-        self.quote9 = quote(1961,'2020-02-27','2020-02-01', 1,40)
-        self.quote9a = quote(1961,'2020-02-27','2020-03-01', 2,45)
-        self.quote10 = quote(1961,'2020-02-28','2020-02-01', 1,50)
-        self.quote10a = quote(1961,'2020-02-28','2020-03-01', 2,55)
-        self.quote10b = quote(1961,'2020-02-28','2020-04-01', 3,58)
+        self.quote9 = quote(1961,'2020-02-27','2020-02-01', 1,40.3)
+        self.quote9a = quote(1961,'2020-02-27','2020-03-01', 2,45.4)
+        self.quote10 = quote(1961,'2020-02-28','2020-02-01', 1,50.1)
+        self.quote10a = quote(1961,'2020-02-28','2020-03-01', 2,55.2)
+        self.quote10b = quote(1961,'2020-02-28','2020-04-01', 3,58.8)
         
-        self.quote11 = quote(1961,'2020-03-02','2020-03-01', 1,60)
-        self.quote12 = quote(1961,'2020-03-02','2020-04-01', 2,70)
-        self.quote13 = quote(1961,'2020-04-02','2020-04-01', 1,80)
-        self.quote14 = quote(1961,'2020-03-31','2020-04-01', 2,85)
-        self.quote14a = quote(1961,'2020-03-31','2020-05-01', 3,85)
-        self.quote15 = quote(1961,'2020-04-01','2020-05-01', 2,90)
+        self.quote11 = quote(1961,'2020-03-02','2020-03-01', 1,60.6)
+        self.quote12 = quote(1961,'2020-03-02','2020-04-01', 2,70.8)
+        self.quote13 = quote(1961,'2020-04-02','2020-04-01', 1,80.9)
+        self.quote14 = quote(1961,'2020-03-31','2020-04-01', 2,85.5)
+        self.quote14a = quote(1961,'2020-03-31','2020-05-01', 3,85.4)
+        self.quote15 = quote(1961,'2020-04-01','2020-05-01', 2,90.3)
 
         def fn_for_quote(q):
             q.Instrument        # str
@@ -1672,21 +1672,21 @@ class priceReturnsCase(unittest.TestCase):
     # self.quote14a = quote(1961,'2020-03-31','2020-05-01', 3,85)
     # self.quote15 = quote(1961,'2020-04-01','2020-05-01', 2,90)
 
-    def test_get_returns_for_curve_day_after_expiry_double_proxy_shift(self):
-        self.assertEqual(get_returns_for_curve([self.value11,self.value10], [self.value10a], \
-            [self.value12,self.value10a], is_double_proxy=True),
+    def test_get_returns_for_curve_day_of_expiry_double_proxy_shift(self):
+        self.assertEqual(get_returns_for_curve([self.value10,self.value9], [self.value10a], \
+            [self.value10a,self.value9a], is_double_proxy=True),
             [
-                {
-                    'Instrument': self.quote11.IdInstrument,
-                    'Asof': self.quote11.Asof,                    
-                    'M': 1,
-                    'Value': self.calc_returns(self.quote12.Value, self.quote10a.Value)
-                } ,
                 {
                     'Instrument': self.quote10.IdInstrument,
                     'Asof': self.quote10.Asof,                    
                     'M': 1,
-                    'Value': self.calc_returns(self.quote10.Value, 1)
+                    'Value': self.calc_returns(self.quote10a.Value, self.quote9a.Value)
+                } ,
+                {
+                    'Instrument': self.quote9.IdInstrument,
+                    'Asof': self.quote9.Asof,                    
+                    'M': 1,
+                    'Value': self.calc_returns(self.quote9.Value, 1)
                 }                
             ]
         )

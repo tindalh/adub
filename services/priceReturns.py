@@ -4,7 +4,7 @@ from helpers.dataAccess import DataAccess
 from helpers.utils import write_to_csv
 import os
 import numpy
-from datetime import datetime
+from datetime import datetime, timedelta
 
 ## ListOfQuotes ListOfExpiries-> list (list(dicts)) 
 ## Given a list of quotes, produce the returns curve per tenor
@@ -53,16 +53,22 @@ def get_returns_for_curve(m1, shifted_expiry_quotes, m2=[], is_double_proxy=Fals
         current = m1[i]["Value"]
 
         if(len(m1) > i + 1): # 2 Try to use the previous days quote
-            previous = m1[i + 1]            
+            previous = m1[i + 1]    
 
-        for v in shifted_expiry_quotes: 
-            if(previous["Asof"] == v["Asof"]): # 3 Try to use the shifted quote
-                previous = v
+        if(is_double_proxy and m1[i]["M"] == 1 ):            
+            for v in shifted_expiry_quotes: 
+                if(m1[i]["Asof"] == v["Asof"]):        
+                    current = m2[i]["Value"]  
+                    if(len(m2) > i + 1):
+                        previous = m2[i + 1] 
+                if(previous["Asof"] == v["Asof"]): # 3 Try to use the shifted quote
+                    previous = v 
+        else:  
+            for v in shifted_expiry_quotes: 
+                if(previous["Asof"] == v["Asof"]): # 3 Try to use the shifted quote
+                    previous = v
 
-                if(is_double_proxy):
-                    for q in m2:
-                        if(q["Asof"] == m1[i]["Asof"]):
-                            current = q["Value"]
+                
                 
 
         m1[i]["Value"] = log_returns(current, previous["Value"])
@@ -170,7 +176,7 @@ def generate_returns():
 
     traded_instruments =  dtAccss.load('view_TradedInstruments')
 
-    for i in traded_instruments:   
+    for i in traded_instruments:  
         returns_filter = {'IdInstrument': [i.Id]}
         most_recent_returns = dtAccss.get_max_database_date('view_Returns', 'Asof', 'dbo', **returns_filter)
 
@@ -180,6 +186,10 @@ def generate_returns():
 
         expiries_filter = {'IdInstrument': i.Id}
         expiries = dtAccss.load('Expiry', **expiries_filter)
+        
+        if (len(expiries) == 0):
+            expiries_filter = {'IdSource': i.IdSource}
+            expiries = dtAccss.load('Expiry', **expiries_filter)
 
         result = get_returns_for_curves(quotes, expiries, i.IsDoubleProxyRoll)
 
