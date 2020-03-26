@@ -130,7 +130,7 @@ class DataAccess(object):
         else:
             self.cursor.execute(sql)
 
-    def loadToCSV(self, sql, file_name="loadToCSV_output", file_path=""):
+    def loadToCSV(self, sql, file_name, file_path=""):
         rows = self.cursor.execute(sql)
         if(len(file_path) > 0):
             if(file_path[:-1] != "\\"):

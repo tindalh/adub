@@ -34,7 +34,7 @@ import helpers.log as log
 from helpers.utils import get_date_from_string, insert_datestamp_in_filename, \
     load_json, get_max_file_date, write_to_csv, files_later_than, \
     get_unique_values_for_dataframe_keys
-import importers.eiaImporter as eia
+#import importers.eiaImporter as eia
 from importers.emailImporter import EmailImporter
 from services.excelExtractor import extract_files, _extract_sections, \
     _extract_blocks, _extract_rows, _extract_columns, _get_block_start, \
@@ -118,21 +118,11 @@ class DataAccessCase(unittest.TestCase):
         self.database = 'is mocked'
         self.dataAccess = DataAccess('any', 'thing', is_unit_test=True)
         self.dataAccess.cursor = MagicMock()
-
-    def test_loadToCSV(self):
-
-        period = collections.namedtuple('period', 'Period PeriodType PeriodEnd')
-
-        period1 = period('2020-02-01', 1, '2020-02-10')
-        period2 = period('2020-02-11', 1, '2020-02-21')
-
-        self.dataAccess.cursor.execute.return_value = [period1, period2]
-
-        self.assertIsNone(self.dataAccess.loadToCSV("Select * from Period"))
+        self.file_path = '\\data'
         
     def test_bulkInsert(self):
         self.dataAccess.cursor.execute.return_value = None
-        self.assertIsNone(self.dataAccess.bulkInsert('dummy_table', "loadToCSV_output.csv", truncate=True ))
+        self.assertIsNone(self.dataAccess.bulkInsert('dummy_table', self.file_path + "\\loadToCSV_output.csv", truncate=True ))
 
 
     def test_deleteById(self):
@@ -527,7 +517,7 @@ class ExchangeWrapperCase(unittest.TestCase):
         )
 
         self.m.attach(a)
-        self.file_path = ''
+        self.file_path = 'data'
 
         
 

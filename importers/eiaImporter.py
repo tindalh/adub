@@ -3,10 +3,13 @@ import os
 import datetime
 import requests
 import sys
+sys.path.append('..')
 import helpers.dataAccess as dtAccss
 import helpers.stringHelper as strngHlpr
+import service_constants
 import json
 from helpers.log import log
+
 
 class EiaImporter(object):
     def __init__(self, server, database, url, api_key, file_path, bulkinsert_path):
@@ -27,20 +30,20 @@ class EiaImporter(object):
         else:
             if(action == 'series' and self.testLevel == 2):
                 log(__name__, 'get', f"loading test series...'")
-                with open('testData/series.json') as json_file:
+                with open('tests/data/series.json') as json_file:
                     data = json.load(json_file)
                     self.testLevel += 1
                     return data 
             elif(testLevel == 0):
                 log(__name__, 'get', f"loading test parent category...'")
-                with open('testData/category.json') as json_file:
+                with open('tests/data/category.json') as json_file:
                     data = json.load(json_file)
                     self.testLevel += 1
                     return data 
             elif(testLevel == 1):
                 if(testType == 'category'):
                     log(__name__, 'get', f"loading test child category...'")
-                    with open('testData/childCategory.json') as json_file:
+                    with open('tests/data/childCategory.json') as json_file:
                         data = json.load(json_file)
                         self.testLevel += 1
                         return data 
@@ -174,7 +177,7 @@ class EiaImporter(object):
             for id in series_id.split(';'):
                     dataAccess.executeStoredProcedure('build_mview_EIASeries', (str(id),))
 
-        log(__name__, 'runSeries', f"The following series were updated:", email=True, emailSubject='Eia Update', emailTable=reportString)
+        log(__name__, 'runSeries', f"{len(seriesToUpdate)} series were updated.", email=True, emailSubject='Eia Update', emailTable=reportString)
         
     def loadCategory(self, category_id, dataAccess, isRoot=False):
         parameters = self.setParameters('category', category_id)
@@ -287,3 +290,7 @@ class EiaImporter(object):
                 Insert INto EIAcategorySeries (category_id, series_id) Select category_id, series_id from #EIAcategorySeries
             """
         dataAccess.executeRawSQL(sql.format(path))
+
+if(__name__ == '__main__'):
+    
+    service_constants.eiaImporter.runSeries()

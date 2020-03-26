@@ -88,7 +88,7 @@ class ClipperDataImporter(object):
 
             data = response.json()['record']
         else:
-            with open("testData/clipperData.json") as csv_file:
+            with open("tests/data/clipperData.json") as csv_file:
                 data = json.load(csv_file)['record']
         
         self.addToCSV(self.csv_file_path, data)
