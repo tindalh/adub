@@ -59,8 +59,8 @@ class Initialiser(object):
         wtchr.watch('Clipper Floating Storage', clipperFloatingStorageIntegrator)
 
     def startEiaImportScheduler(self):
-        scheduler = schedule.every(1).minutes.do(eiaImporter.runSeries).scheduler
-        #scheduler = schedule.every().wednesday.at("20:00").do(eiaImporter.runSeries).scheduler
+        #scheduler = schedule.every(1).minutes.do(eiaImporter.runSeries).scheduler
+        scheduler = schedule.every().wednesday.at("20:00").do(eiaImporter.runSeries).scheduler
         eiaScheduler = jobSchdlr.JobScheduler('Eia Import', scheduler)
         eiaScheduler.schedule()  
 
