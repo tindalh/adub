@@ -11,6 +11,7 @@ from helpers.dataAccess import DataAccess
 from helpers.utils import get_date_from_string, load_json, write_to_csv, files_later_than
 from services.excelExtractor import extract_files
 import pyodbc
+from os import walk
 
 from decimal import Decimal
 from cred_secrets import USERNAME, PASSWORD
@@ -20,59 +21,35 @@ import csv
 
 
 class EmailImporter(object):
-    def __init__(self, email_subject, file_path, database_server, database, name, table_name, file_parts):
+    def __init__(self, email_subject, file_path, database_server, database, name, table_name, file_parts, fn_get_max_saved, fn_save=None):
         self.email_subject = email_subject
         self.file_path = file_path
         self.name = name   
         self.table_name = table_name 
         self.database_server = database_server
         self.database = database    
-        self.file_parts = file_parts     
+        self.file_parts = file_parts
+        self.fn_get_max_saved = fn_get_max_saved    
+        self.fn_save = fn_save 
 
 
-    def run(self):
+    def run(self):        
         try:
-            data_access = DataAccess(self.database_server, self.database)  
-            file_list = os.listdir(self.file_path)
-
-            exchangeWrapper = ExchangeWrapper()
             
-            max_database_date = datetime.datetime.now()
-            for part in self.file_parts:
-                d = {'Curve':[part]}
-
-                max_database_date = min(max_database_date, data_access.get_max_database_date(self.table_name, 'Asof', schema_name='import', **d))
+            exchangeWrapper = ExchangeWrapper()
                 
-            list_emails = exchangeWrapper.get_emails(self.email_subject, max_database_date)
-            exchangeWrapper.save_email_attachments(list(list_emails), self.file_path)
+            list_emails = exchangeWrapper.get_emails(
+                self.email_subject, \
+                    self.fn_get_max_saved(self.database_server, self.database, self.table_name, self.file_parts))
 
-            #account.protocol.close()
+            exchangeWrapper.save_email_attachments(list(list_emails), self.file_path, self.file_parts)
+
+            if (self.fn_save is not None):
+                self.fn_save(self.file_parts)
 
             log(__name__, '__run__', f"{self.name} has downloaded all emails with the subject: {self.email_subject}", level="Info")
         except Exception as e:
             log(__name__, '__run__', f"{self.name} has failed: {str(e)}", level="Error", email=True, emailSubject=self.name)
+            raise e
 
-        
-        #filtered_files = files_later_than(self.file_list, self.max_database_date)
-        #print(self.name.replace(' ', '_'))
-        #list_dicts = extract_files(filtered_files, )
-        #print(list_dicts)
-        # write_to_csv(list_dicts, self.file_path)
-
-        # log(__name__, 'run', f"Complete")
-
-
-
-
-if(__name__ == "__main__"):   
-
-    emailImporter = EmailImporter(
-        'ICE 1630 SGT Futures',
-        "{}\\ICE_Settlement\\Attachments".format(os.environ['ADUB_Import_Path']),
-        database_server=os.environ['ADUB_DBServer'],
-        database='Price',
-        name='ICE 1630 SGT Futures',
-        table_name = 'ICE_Settlement_Curve'
-
-    )
-    emailImporter.run()
+      

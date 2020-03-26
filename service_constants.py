@@ -4,9 +4,9 @@ from importers.mcQuilling import McQuilling
 from cleaners.ieaTxtCleaner import clean as cleanIeaTxt
 from cleaners.rystadCleaner import clean as rystadCleaner
 from cleaners.clipperFloatingStorageCleaner import clean as clipperFloatingStorageCleaner
-from cleaners.ice_settlementCleaner import clean as ice_cleaner
 import importers.eiaImporter as eiaImprtr
 from importers.emailImporter import EmailImporter
+from importers.iceAttachments import get_max_date_imported, import_ICE_attachments
 import os
 
 ieaSupplyIntegrator = csvIntgrtr.CsvIntegrator(
@@ -238,125 +238,6 @@ mcQuillingIntegrator = csvIntgrtr.CsvIntegrator(
     post_op_procedure='sp_McQuilling_Load',
 )
 
-SGTBrentCrude = csvIntgrtr.CsvIntegrator(
-    name='ICE 1630 SGT Brent Crude Futures',
-    server=os.environ['ADUB_DBServer'],
-    database='Price',
-    table_name='import.Ice_Settlement_Curve',
-    file_columns=['ContractDate','Value'],
-    file_path="{}\\ICE_Settlement".format(os.environ['ADUB_Import_Path']), 
-    output_file_path="{}\\ICE_Settlement".format(os.environ['ADUB_Import_Output_UNC']), 
-    truncate=False,
-    clean=ice_cleaner,
-    keys=['Asof', 'Curve'],
-    needs_asof=True,
-    file_part = 'ICE 1630 SGT Brent Crude Futures',
-    delimiter=',',
-    post_op_procedure='sp_ICE_Settlement_Load',
-)
-
-SGTLSGasOil = csvIntgrtr.CsvIntegrator(
-    name='ICE 1630 LS Gas Oil Futures',
-    server=os.environ['ADUB_DBServer'],
-    database='Price',
-    table_name='import.Ice_Settlement_Curve',
-    file_columns=['ContractDate','Value'],
-    file_path="{}\\ICE_Settlement".format(os.environ['ADUB_Import_Path']), 
-    output_file_path="{}\\ICE_Settlement".format(os.environ['ADUB_Import_Output_UNC']), 
-    truncate=False,
-    clean=ice_cleaner,
-    keys=['Asof', 'Curve'],
-    needs_asof=True,
-    file_part = 'ICE 1630 SGT LS Gas Oil Futures',
-    delimiter=',',
-    post_op_procedure='sp_ICE_Settlement_Load',
-)
-
-LSGasOil1930 = csvIntgrtr.CsvIntegrator(
-    name='ICE 1930 LS Gas Oil Futures',
-    server=os.environ['ADUB_DBServer'],
-    database='Price',
-    table_name='import.Ice_Settlement_Curve',
-    file_columns=['ContractDate','Value'],
-    file_path="{}\\ICE_Settlement".format(os.environ['ADUB_Import_Path']), 
-    output_file_path="{}\\ICE_Settlement".format(os.environ['ADUB_Import_Output_UNC']), 
-    truncate=False,
-    clean=ice_cleaner,
-    keys=['Asof', 'Curve'],
-    needs_asof=True,
-    file_part = 'ICE 1930 LS Gas Oil Futures',
-    delimiter=',',
-    post_op_procedure='sp_ICE_Settlement_Load',
-)
-
-WTICrude = csvIntgrtr.CsvIntegrator(
-    name='ICE 1630 WTI Crude Futures',
-    server=os.environ['ADUB_DBServer'],
-    database='Price',
-    table_name='import.Ice_Settlement_Curve',
-    file_columns=['ContractDate','Value'],
-    file_path="{}\\ICE_Settlement".format(os.environ['ADUB_Import_Path']), 
-    output_file_path="{}\\ICE_Settlement".format(os.environ['ADUB_Import_Output_UNC']), 
-    truncate=False,
-    clean=ice_cleaner,
-    keys=['Asof', 'Curve'],
-    needs_asof=True,
-    file_part = 'ICE 1630 WTI Crude Futures',
-    delimiter=',',
-    post_op_procedure='sp_ICE_Settlement_Load',
-)
-
-HeatingOil = csvIntgrtr.CsvIntegrator(
-    name='ICE 1630 Heating Oil Futures',
-    server=os.environ['ADUB_DBServer'],
-    database='Price',
-    table_name='import.Ice_Settlement_Curve',
-    file_columns=['ContractDate','Value'],
-    file_path="{}\\ICE_Settlement".format(os.environ['ADUB_Import_Path']), 
-    output_file_path="{}\\ICE_Settlement".format(os.environ['ADUB_Import_Output_UNC']), 
-    truncate=False,
-    clean=ice_cleaner,
-    keys=['Asof', 'Curve'],
-    needs_asof=True,
-    file_part = 'ICE 1630 Heating Oil Futures',
-    delimiter=',',
-    post_op_procedure='sp_ICE_Settlement_Load',
-)
-
-RBOB = csvIntgrtr.CsvIntegrator(
-    name='ICE 1630 (RBOB) Gasoline Futures',
-    server=os.environ['ADUB_DBServer'],
-    database='Price',
-    table_name='import.Ice_Settlement_Curve',
-    file_columns=['ContractDate','Value'],
-    file_path="{}\\ICE_Settlement".format(os.environ['ADUB_Import_Path']), 
-    output_file_path="{}\\ICE_Settlement".format(os.environ['ADUB_Import_Output_UNC']), 
-    truncate=False,
-    clean=ice_cleaner,
-    keys=['Asof', 'Curve'],
-    needs_asof=True,
-    file_part = 'ICE 1630 (RBOB) Gasoline Futures',
-    delimiter=',',
-    post_op_procedure='sp_ICE_Settlement_Load',
-)
-
-BrentCrude1630 = csvIntgrtr.CsvIntegrator(
-    name='ICE 1630 Brent Crude Futures',
-    server=os.environ['ADUB_DBServer'],
-    database='Price',
-    table_name='import.Ice_Settlement_Curve',
-    file_columns=['ContractDate','Value'],
-    file_path="{}\\ICE_Settlement".format(os.environ['ADUB_Import_Path']), 
-    output_file_path="{}\\ICE_Settlement".format(os.environ['ADUB_Import_Output_UNC']), 
-    truncate=False,
-    clean=ice_cleaner,
-    keys=['Asof', 'Curve'],
-    needs_asof=True,
-    file_part = 'ICE 1630 Brent Crude Futures',
-    delimiter=',',
-    post_op_procedure='sp_ICE_Settlement_Load',
-)
-
 eiaImporter = eiaImprtr.EiaImporter(
     server=os.environ['ADUB_DBServer'], 
     database='Analytics',
@@ -382,6 +263,8 @@ eiSGTBrentCrude = EmailImporter(
     name='ICE 1630 SGT Futures',
     table_name = 'ICE_Settlement_Curve',
     file_parts = ['ICE 1630 SGT Brent Crude Futures','ICE 1630 SGT LS Gas Oil Futures'],
+    fn_save = import_ICE_attachments,
+    fn_get_max_saved = get_max_date_imported
 )
 
 ei1930LSGasOil = EmailImporter(
@@ -391,7 +274,9 @@ ei1930LSGasOil = EmailImporter(
     database='Price',
     name='ICE 1930 LS Gas Oil Curve Futures',
     table_name = 'ICE_Settlement_Curve',
-    file_parts=['ICE 1930 LS Gas Oil Futures']
+    file_parts=['ICE 1930 LS Gas Oil Futures'],
+    fn_save = import_ICE_attachments,
+    fn_get_max_saved = get_max_date_imported
 )
 
 ei1630Oil = EmailImporter(
@@ -401,7 +286,9 @@ ei1630Oil = EmailImporter(
     database='Price',
     name='ICE 1630 Oil Futures Curves',
     table_name = 'ICE_Settlement_Curve',
-    file_parts=['ICE 1630 WTI Crude Futures','ICE 1630 Heating Oil Futures','ICE 1630 (RBOB) Gasoline Futures']
+    file_parts=['ICE 1630 WTI Crude Futures','ICE 1630 Heating Oil Futures','ICE 1630 (RBOB) Gasoline Futures'],
+    fn_save = import_ICE_attachments,
+    fn_get_max_saved = get_max_date_imported
 )
 
 ei1630BrentCurve = EmailImporter(
@@ -411,7 +298,9 @@ ei1630BrentCurve = EmailImporter(
     database='Price',
     name='ICE 1630 Brent Curve Futures',
     table_name = 'ICE_Settlement_Curve',
-    file_parts=['ICE 1630 Brent Crude Futures']
+    file_parts=['ICE 1630 Brent Crude Futures'],
+    fn_save = import_ICE_attachments,
+    fn_get_max_saved = get_max_date_imported
 )
 
 refineryInfoFranchiser = refineryInfoFrnchsr.RefineryInfoFranchiser(

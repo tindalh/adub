@@ -57,7 +57,7 @@ def get_returns_for_curve(m1, shifted_expiry_quotes, m2=[], is_double_proxy=Fals
 
         if(is_double_proxy and m1[i]["M"] == 1 ):            
             for v in shifted_expiry_quotes: 
-                if(m1[i]["Asof"] == v["Asof"]):        
+                if(m1[i]["Asof"] == v["Asof"]):  
                     current = m2[i]["Value"]  
                     if(len(m2) > i + 1):
                         previous = m2[i + 1] 

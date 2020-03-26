@@ -2,8 +2,10 @@ from exchangelib import FileAttachment, FaultTolerance, Configuration, Credentia
 import datetime
 import time
 import sys
+import os
 sys.path.append('..')
 from helpers.utils import insert_datestamp_in_filename
+from helpers.log import error_email
 
 from cred_secrets import USERNAME, PASSWORD
 from constants import ANALYTICS_EMAIL_ADDRESS, EXCHANGE_SERVER
@@ -27,7 +29,7 @@ class ExchangeWrapper:
 
     # List of exchangelib.Message String -> None
     # Consumes a list of emails and saves attachments
-    def save_email_attachments(self, emails, file_path):
+    def save_email_attachments(self, emails, file_path, attachment_directories):
 
         if(len(emails) == 0):
             return None
@@ -35,21 +37,37 @@ class ExchangeWrapper:
             first = emails[0]
             rest = emails[1:]
 
-            self.save_attachments(first.attachments, file_path, first.datetime_received)
-            time.sleep(3)
-            self.save_email_attachments(rest, file_path)
+            self.save_attachments(first.attachments, file_path, first.datetime_received, attachment_directories)
+            
+            self.save_email_attachments(rest, file_path, attachment_directories)
 
     # List of exchangelib.FileAttachment String Date -> None
     # Consumes a list of attachments and saves each one to file_path
-    def save_attachments(self, attachments, file_path, date_received):
+    def save_attachments(self, attachments, file_path, date_received, attachment_directories):
         for attachment in attachments:
             if isinstance(attachment, FileAttachment):
-                self.save_attachment(attachment, file_path, date_received)
+                self.save_attachment(attachment, file_path, date_received, attachment_directories)
 
     # exchangelib.FileAttachment String Date -> None
     # Consumes an attachment and saves it to file_path with the date stamp inserted into the filename
-    def save_attachment(self, attachment, file_path, date_received):    
-        full_file_path = insert_datestamp_in_filename(file_path, attachment.name, date_received)
+    def save_attachment(self, attachment, file_path, date_received, attachment_directories):  
+        full_file_path = self.get_file_path(file_path, attachment.name, date_received, attachment_directories)
+        
+        if (full_file_path is None):
+            error_email(__name__, 'save_attachment',\
+             f'The list of directories supplied does not match the email attachment name: {attachment.name}')
+        else:
+            with open(full_file_path, 'wb') as f:
+                f.write(attachment.content)
 
-        with open(full_file_path, 'wb') as f:
-            f.write(attachment.content)
+    def get_file_path(self, file_path, attachment_name, date_received, attachment_directories):
+        full_file_path = None
+
+        if(len(attachment_directories) == 0):
+            full_file_path = insert_datestamp_in_filename(file_path, attachment_name, date_received)
+        else:
+            for d in attachment_directories:
+                if d.lower() in attachment_name.lower():  
+                    full_file_path = insert_datestamp_in_filename(os.path.join(file_path, d), attachment_name, date_received)
+        
+        return full_file_path

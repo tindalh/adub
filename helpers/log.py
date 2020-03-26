@@ -1,10 +1,10 @@
 import logging
 import os
 
-from constants import LOG_FILE
+from constants import LOG_FILE, INTERNAL_DOMAIN, PRODUCTION_DB_SERVER
 import helpers.analyticsEmail as analyticsEmail
 
-logging.basicConfig(filename='C:\\Apps\\Analytics\\adub\\logs\\adub.log',level=logging.INFO,format='%(asctime)s %(message)s')
+logging.basicConfig(filename=LOG_FILE,level=logging.INFO,format='%(asctime)s %(message)s')
 
 def log(moduleName, functionName, message, level='Info', email=False, emailSubject="", emailTable=""):
     
@@ -19,8 +19,8 @@ def log(moduleName, functionName, message, level='Info', email=False, emailSubje
     elif(level.lower() == 'error'):
         logging.error(logMessage)
 
-    if(email):
-        if(os.environ['ADUB_DBServer'].lower() != 'arcsql'):
+    if(email and 'arcpet' in os.environ["userdomain"].lower() ):
+        if(os.environ['ADUB_DBServer'].lower() != PRODUCTION_DB_SERVER):
             emailSubject = 'TEST ' + emailSubject
             
         analyticsEmail.sendEmail(level, emailSubject, message, emailTable)
@@ -46,6 +46,20 @@ def error(moduleName, functionName, message):
     print(logMessage)
 
     logging.error(logMessage)
+    return logMessage
+
+def error_email(moduleName, functionName, message):
+    logMessage = "{:<8}".format("Error") + " | " + moduleName + "." + "{:<50s}".format(functionName) + " | " + message
+    print(logMessage)
+
+    logging.error(logMessage)
+
+    if(INTERNAL_DOMAIN.lower() in os.environ["userdomain"].lower() ):
+        if(os.environ['ADUB_DBServer'].lower() != PRODUCTION_DB_SERVER):
+            emailSubject = 'TEST ' + emailSubject
+            
+        analyticsEmail.sendEmail("Error", moduleName + '.' + functionName, message)
+
     return logMessage
 
     

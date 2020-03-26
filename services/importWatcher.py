@@ -48,7 +48,7 @@ class WatchdogHandler(FileSystemEventHandler):
                     new_path= event.src_path + "_"
                     os.rename(event.src_path,new_path)
                     os.rename(new_path,event.src_path)
-                    time.sleep(0.05)
+                    time.sleep(0.3)
                     break
                 except OSError as e:
                     time.sleep(0.05)

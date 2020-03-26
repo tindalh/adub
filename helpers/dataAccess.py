@@ -4,13 +4,14 @@ import datetime
 from helpers.log import log as log
 
 class DataAccess(object):
-    def __init__(self,server,database):
+    def __init__(self,server,database, is_unit_test=False):
         self.server = server
         self.database = database
         self.connectionString= 'DRIVER={SQL Server};SERVER=' + server+';DATABASE='+database+';Trusted_connection=yes'
-        self.cnxn = pyodbc.connect(self.connectionString, autocommit=True)
-        self.cursor = self.cnxn.cursor()
-
+        
+        if(is_unit_test == False):
+            self.cnxn = pyodbc.connect(self.connectionString, autocommit=True)
+            self.cursor = self.cnxn.cursor()
    
     def load(self, table, **kwargs):
         sql = f"SELECT * FROM {table}"
@@ -71,10 +72,14 @@ class DataAccess(object):
                 if(j == 0):
                     sql += ' ('
 
-                if(key[:1] == ">"):
+                if(key[:2] == ">="):
+                    sql += f"{key[2:]} >= ?"
+                elif(key[:2] == "<="):
+                    sql += f"{key[2:]} <= ?"
+                elif(key[:1] == ">"):
                     sql += f"{key[1:]} > ?"
                 elif(key[:1] == "<"):
-                    sql += f"{key[1:]} < ?"
+                    sql += f"{key[1:]} < ?"    
                 else:
                     sql += f"{key} = ?"
                 params += {value}
@@ -93,7 +98,7 @@ class DataAccess(object):
         
         self.cursor.execute(sql, params)
 
-    def bulkInsert(self, table_name, file_path, delimiter='|', truncate=False):
+    def bulkInsert(self, table_name, file_path, delimiter='|', truncate=False, first_row=2):
         sql = ""
 
         params = list()
@@ -101,7 +106,7 @@ class DataAccess(object):
             sql += f"TRUNCATE TABLE {table_name.strip()};"
            
         
-        sql +=  f"BULK INSERT {table_name.strip()} FROM '{file_path}' WITH (FIRSTROW = 2, FIELDTERMINATOR='{delimiter}');"
+        sql +=  f"BULK INSERT {table_name.strip()} FROM '{file_path}' WITH (FIRSTROW = {first_row}, FIELDTERMINATOR='{delimiter}');"
 
         log(__name__, 'bulkInsert', f"Executing {sql}")
         
@@ -127,7 +132,6 @@ class DataAccess(object):
 
     def loadToCSV(self, sql, file_name="loadToCSV_output", file_path=""):
         rows = self.cursor.execute(sql)
-
         if(len(file_path) > 0):
             if(file_path[:-1] != "\\"):
                 file_path += "\\"

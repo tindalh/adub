@@ -26,9 +26,6 @@ from cleaners.ieaTxtCleaner import clean as cleanIeaTxt
 from cleaners.ieaTxtCleaner import _replaceInvalidQuantities, _cleanDateColumns, _setFrequency, _remove_header_row, clean as clean_iea
 from cleaners.rystadCleaner import clean as rystadCleaner
 from cleaners.clipperFloatingStorageCleaner import clean as clipperFloatingStorageCleaner
-from cleaners.ice_settlementCleaner import clean as ice_cleaner
-from cleaners.ice_settlementCleaner import clean, _set_asof, _format_contract_column, \
-    _parse_contract_column, _set_curve_name_column, _arrange_columns
 from cleaners.rystadCleaner import clean, __setWeightedSulphur__, __arrangeColumns__, __getWeightedSulphur__
 from helpers.csvHelper import getDataframe, extract_dataframe
 from helpers.dataAccess import DataAccess
@@ -45,280 +42,10 @@ from services.excelExtractor import extract_files, _extract_sections, \
 from services.exchangeWrapper import ExchangeWrapper
 from services.priceReturns import *
 from exchangelib import DELEGATE,Configuration, Credentials, Account, FileAttachment, EWSDateTime
-from constants import ANALYTICS_EMAIL_ADDRESS, EXCHANGE_SERVER
+from constants import ANALYTICS_EMAIL_ADDRESS, EXCHANGE_SERVER, TARGO_DB_NAME
 from service_constants import *
 from importers.mcQuilling import McQuilling
 from cred_secrets import USERNAME, PASSWORD
-
-
-def get_json_result(url):
-        return json.dumps("")
-
-class ClipperDataImporterCase(unittest.TestCase):
-    # str -> json
-    # Consumes a url and produces the resulting json
-
-    # python -m unittest test_clipperDataImporter.ClipperDataImporterCase.test_get_json_result
-    def test_get_json_result(self):
-        self.assertEqual(get_json_result(""), json.dumps(""))
-    
-    # python -m unittest test_clipperDataImporter.ClipperDataImporterCase.test_import
-
-    
-
-    def getDataFrame(self, response):
-        data = json.loads(response)['record']
-        df = pd.DataFrame.from_dict(data)
-        return df
-
-    def flattenColumns(self, df):
-        df = pd.concat([df.drop(['measuresGlobalCrudeEntityPK'], axis=1), df['measuresGlobalCrudeEntityPK'].apply(pd.Series)], axis=1)
-        return df
-
-    def deleteUpdatedOrRemoved(self, ids_to_delete, dataAccess, table_name, id_name):
-        dataAccess.deleteById(table_name, id_name, ids_to_delete)
-
-    def arrangeColumns(self, df, dataAccess, table_name):
-        table_columns = dataAccess.load("view_TableColumns", TableName= table_name)
-
-        series = list()
-        for columnInfo in table_columns:
-            for df_column in df.columns:
-                if(columnInfo.ColumnName.lower() == df_column.lower()):
-                    series.append(df[df_column])
-
-        dfResult = pd.concat(series, axis=1)
-
-        return dfResult
-
-    def test_import(self):
-        df = self.getDataFrame(self.response)
-        
-        df = self.flattenColumns(df)
-        
-        dataAccess = dtAccss.DataAccess('Lon-PC53', 'STG_Targo')
-
-        ids_to_delete = ','.join([str(x) for  x in df['rowNum'].unique()])
-        
-        self.deleteUpdatedOrRemoved(ids_to_delete, dataAccess, self.clipperDataImporter.table_name, 'rowNum')
-
-        dfResult = self.arrangeColumns(df, dataAccess, self.clipperDataImporter.table_name)
-
-        dfResult.to_csv(self.clipperDataImporter.output_file_path, sep='|', index=False)
-
-        dataAccess.bulkInsert(self.clipperDataImporter.table_name, self.clipperDataImporter.output_file_path)
-
-
-    def setUp(self):
-        self.clipperDataImporter = clpprDtaImprtr.ClipperDataImporter(
-            url="test",
-            user = "targo.support@arcpet.co.uk",
-            server= "Lon-PC53",
-            database = "STG_Targo",
-            password = "arcsupport212",
-            output_file_path="{}\\ClipperData\\clipperData.csv".format(os.environ['ADUB_Import_Output_UNC']),
-            table_name='yview_ClipperStaging'
-        )
-        self.response="""
-            {
-            "request_status":"VALID_REQUEST",
-            "record":[
-                {
-                    "type":"measuresGlobalCrudeEntity",
-                    "loadArea":"KOR",
-                    "offtakeArea":"CH-S",
-                    "offtakePoint":"",
-                    "api":28.0,
-                    "area":"",
-                    "bbls":47629,
-                    "bblsNominal":420000,
-                    "bill":"",
-                    "charter_grade":"",
-                    "charter_load_area":"",
-                    "charter_offtake_area":"",
-                    "charterer":"",
-                    "consignee":"",
-                    "declaredDest":"MY TANJUNG PELEPAS",
-                    "domExp":"",
-                    "grade":"CRUDE",
-                    "gradeApi":"medium",
-                    "gradeCountry":"UNKNOWN",
-                    "gradeRegion":"UNKNOWN",
-                    "gradeSulfur":"sweet",
-                    "imo":9289489,
-                    "lightering_vessel":"",
-                    "loadAreaDescr":"Korea",
-                    "loadCountry":"SOUTH KOREA",
-                    "loadDate":"2017-07-23T00:00:00Z",
-                    "loadOwner":"KNOC",
-                    "loadPoint":"KNOC - Yeosu Sapo Terminal",
-                    "loadPort":"YEOSU",
-                    "loadPortBill":"",
-                    "loadRegion":"EAST ASIA",
-                    "loadState":"",
-                    "loadStsVessel":"",
-                    "load_sts_imo":"",
-                    "measuresGlobalCrudeEntityPK":{
-                        "dateNum":598606,
-                        "rowNum":359766,
-                        "statNum":0
-                    },
-                    "offtakeAreaDescr":"China South",
-                    "offtakeCountry":"",
-                    "offtakeDate":"2017-08-01T00:00:00Z",
-                    "offtakeOwner":"",
-                    "offtakePort":"",
-                    "offtakePortBill":"",
-                    "offtakeRegion":"EAST ASIA",
-                    "offtakeState":"",
-                    "offtakeStsVessel":"",
-                    "offtake_sts_imo":"",
-                    "opecNopec":"",
-                    "probability":0.1134021,
-                    "probabilityGroup":"0-25",
-                    "projection":"Yes",
-                    "route":"",
-                    "shipper":"",
-                    "source":"AIS",
-                    "storage":"No",
-                    "storageZone":"",
-                    "subArea":"",
-                    "sulfur":0.2,
-                    "vessel":"Csk Shelton",
-                    "vesselClass":"Aframax",
-                    "vesselFlag":"HONG KONG"
-                },
-                {
-                    "type":"measuresGlobalCrudeEntity",
-                    "loadArea":"AG",
-                    "offtakeArea":"JAP",
-                    "offtakePoint":"JXTG - Kashima Refinery",
-                    "api":39.2,
-                    "area":"",
-                    "bbls":346000,
-                    "bblsNominal":346000,
-                    "bill":"",
-                    "charter_grade":"",
-                    "charter_load_area":"",
-                    "charter_offtake_area":"",
-                    "charterer":"",
-                    "consignee":"",
-                    "declaredDest":"",
-                    "domExp":"",
-                    "grade":"DAS",
-                    "gradeApi":"light",
-                    "gradeCountry":"UNITED ARAB EMIRATES",
-                    "gradeRegion":"ARAB GULF",
-                    "gradeSulfur":"sour",
-                    "imo":9478664,
-                    "lightering_vessel":"",
-                    "loadAreaDescr":"Arab Gulf",
-                    "loadCountry":"UNITED ARAB EMIRATES",
-                    "loadDate":"2017-04-09T00:00:00Z",
-                    "loadOwner":"Adnoc",
-                    "loadPoint":"ADNOC - Das Island SBM",
-                    "loadPort":"DAS",
-                    "loadPortBill":"",
-                    "loadRegion":"ARAB GULF",
-                    "loadState":"",
-                    "loadStsVessel":"",
-                    "load_sts_imo":"",
-                    "measuresGlobalCrudeEntityPK":{
-                        "dateNum":598607,
-                        "rowNum":301301,
-                        "statNum":0
-                    },
-                    "offtakeAreaDescr":"Japan",
-                    "offtakeCountry":"JAPAN",
-                    "offtakeDate":"2017-05-01T00:00:00Z",
-                    "offtakeOwner":"JXTG Holdings Inc.",
-                    "offtakePort":"KASHIMA KO",
-                    "offtakePortBill":"",
-                    "offtakeRegion":"EAST ASIA",
-                    "offtakeState":"",
-                    "offtakeStsVessel":"",
-                    "offtake_sts_imo":"",
-                    "opecNopec":"Export OPEC",
-                    "probability":1.0,
-                    "probabilityGroup":"75-100",
-                    "projection":"No",
-                    "route":"",
-                    "shipper":"",
-                    "source":"AIS",
-                    "storage":"No",
-                    "storageZone":"",
-                    "subArea":"",
-                    "sulfur":1.3,
-                    "vessel":"Takaoka",
-                    "vesselClass":"VLCC",
-                    "vesselFlag":"JAPAN"
-                },
-                {
-                    "type":"measuresGlobalCrudeEntity",
-                    "loadArea":"AG",
-                    "offtakeArea":"CH-C",
-                    "offtakePoint":"",
-                    "api":18.1,
-                    "area":"",
-                    "bbls":521111,
-                    "bblsNominal":837500,
-                    "bill":"",
-                    "charter_grade":"",
-                    "charter_load_area":"",
-                    "charter_offtake_area":"",
-                    "charterer":"",
-                    "consignee":"",
-                    "declaredDest":"",
-                    "domExp":"",
-                    "grade":"SOROOSH (CYRUS)",
-                    "gradeApi":"heavy",
-                    "gradeCountry":"IRAN",
-                    "gradeRegion":"ARAB GULF",
-                    "gradeSulfur":"sour",
-                    "imo":9218492,
-                    "lightering_vessel":"",
-                    "loadAreaDescr":"Arab Gulf",
-                    "loadCountry":"IRAN",
-                    "loadDate":"2017-07-21T00:00:00Z",
-                    "loadOwner":"NIOC",
-                    "loadPoint":"NIOC - Khalij E Fars FSO",
-                    "loadPort":"KHARG ISLAND",
-                    "loadPortBill":"",
-                    "loadRegion":"ARAB GULF",
-                    "loadState":"",
-                    "loadStsVessel":"",
-                    "load_sts_imo":"",
-                    "measuresGlobalCrudeEntityPK":{
-                        "dateNum":598608,
-                        "rowNum":301740,
-                        "statNum":0
-                    },
-                    "offtakeAreaDescr":"China Central",
-                    "offtakeCountry":"",
-                    "offtakeDate":"2017-08-14T00:00:00Z",
-                    "offtakeOwner":"",
-                    "offtakePort":"",
-                    "offtakePortBill":"",
-                    "offtakeRegion":"EAST ASIA",
-                    "offtakeState":"",
-                    "offtakeStsVessel":"",
-                    "offtake_sts_imo":"",
-                    "opecNopec":"Export OPEC",
-                    "probability":0.6222222,
-                    "probabilityGroup":"50-75",
-                    "projection":"Yes",
-                    "route":"",
-                    "shipper":"",
-                    "source":"AIS",
-                    "storage":"No",
-                    "storageZone":"",
-                    "subArea":"",
-                    "sulfur":3.3,
-                    "vessel":"Deep Sea",
-                    "vesselClass":"VLCC",
-                    "vesselFlag":"PANAMA"
-                }]}
-        """
 
 
 class TestClipperFloatingStorageCleaner(unittest.TestCase):
@@ -387,56 +114,52 @@ class CsvHelperCase(unittest.TestCase):
 
 class DataAccessCase(unittest.TestCase):
     def setUp(self):
-        self.server = "Lon-PC53"
-        self.database = "Analytics"
-        
-    # python -m unittest test_basic.DataAccessCase.test_loadToCSV
+        self.server = 'is mocked'
+        self.database = 'is mocked'
+        self.dataAccess = DataAccess('any', 'thing', is_unit_test=True)
+        self.dataAccess.cursor = MagicMock()
+
     def test_loadToCSV(self):
-        dataAccess = DataAccess(self.server, self.database)
-        self.assertIsNone(dataAccess.loadToCSV("Select * from Period"))
 
-    # python -m unittest test_basic.DataAccessCase.test_bulkInsert
+        period = collections.namedtuple('period', 'Period PeriodType PeriodEnd')
+
+        period1 = period('2020-02-01', 1, '2020-02-10')
+        period2 = period('2020-02-11', 1, '2020-02-21')
+
+        self.dataAccess.cursor.execute.return_value = [period1, period2]
+
+        self.assertIsNone(self.dataAccess.loadToCSV("Select * from Period"))
+        
     def test_bulkInsert(self):
-        dataAccess = DataAccess(self.server, 'IEAData')
-        self.assertIsNone(dataAccess.bulkInsert('SUPPLY', "C:\Dev\Excel Files\Output\IEA\Supply.txt", truncate=True ))
+        self.dataAccess.cursor.execute.return_value = None
+        self.assertIsNone(self.dataAccess.bulkInsert('dummy_table', "loadToCSV_output.csv", truncate=True ))
 
-    # python -m unittest test_basic.DataAccessCase.test_deleteById
+
     def test_deleteById(self):
-        dataAccess = DataAccess(self.server, 'Analytics')
-        self.assertIsNone(dataAccess.deleteById('RystadProduction', "Period", "'2019-02-01'" ))
+        self.dataAccess.cursor.execute.return_value = None
+        self.assertIsNone(self.dataAccess.deleteById('dummy_table', 'a_column', "'2019-02-01'" ))
 
 
-    # python -m unittest test_basic.DataAccessCase.test_load
-    def test_load(self):
-        dataAccess = DataAccess(self.server, self.database)
-        self.assertIsInstance(dataAccess.load('Commodity', Name = "Crude"), list)
-        self.assertIsInstance(dataAccess.load('Commodity'), list)
-        self.assertIsInstance(dataAccess.load('Commodity', Name = "Crude", Description=None), list) # TODO where is null
-
-    # python -m unittest test_basic.DataAccessCase.test_load_with_date_filter
     def test_load_with_date_filter(self):
-        dataAccess = DataAccess(self.server, self.database)
-
-        dataAccess.cursor = MagicMock()
-        dataAccess.cursor.execute.return_value = dataAccess.cursor
+        self.dataAccess.cursor.execute.return_value = None
 
         quote = collections.namedtuple('quote', 'Instrument IdInstrument Asof ContractDate RelativePeriod Value')
 
         quote1 = quote('North Sea', 1961, '2020-02-01','2020-02-01', 1,100)
         
-        dataAccess.cursor.fetchall.return_value = quote1
+        self.dataAccess.cursor.fetchall.return_value = quote1
         filter = {'Instrument': 'North Sea', 'ContractCode': 'B' , '>=Asof': datetime.strftime(datetime(2019, 12, 6, 0, 0, 0), "%Y%M%d")}
 
-        print(dataAccess.load('view_Quotes_Futures', **filter))
+        self.assertEqual(self.dataAccess.load('view_Quotes_Futures', **filter), quote1)
 
     def test_get_max_database_date(self):
-        dataAccess = DataAccess(self.server, 'Price')
+        self.dataAccess.cursor.execute().fetchval.return_value = datetime.strftime(datetime(2000,1,1,12,0,0), '%Y-%m-%d')
         d = {'Class':['VLCC']}
-        self.assertEqual(type(dataAccess.get_max_database_date('McQuilling', 'DateStamp', 'import', **d)), datetime)
+        self.assertEqual(type(self.dataAccess.get_max_database_date('McQuilling', 'DateStamp', 'import', **d)), datetime)
 
 
     def test_delete_two_parameters_one_value_each(self):
-        dataAccess = DataAccess(self.server, 'Price')
+        self.dataAccess.cursor.execute.return_value = None
 
         df = pd.DataFrame(
             {
@@ -447,48 +170,47 @@ class DataAccessCase(unittest.TestCase):
 
         dict_keys = get_unique_values_for_dataframe_keys(df, ['asof', 'curve'])        
               
-        self.assertIsNone(dataAccess.delete('import.ICE_Settlement_Curve', **dict_keys))
+        self.assertIsNone(self.dataAccess.delete('import.ICE_Settlement_Curve', **dict_keys))
 
-class EiaImporterCase(unittest.TestCase):
-    def setUp(self):
-        self.eiaImporter = eia.EiaImporter(
-                server=os.environ['ADUB_DBServer'], 
-                database='Analytics',
-                url="http://api.eia.gov",
-                api_key='a50a785e3c8ad1b5bdd26cf522d4d473',
-                file_path="{}\\EIA".format(os.environ['ADUB_Import_Output_UNC']),
-                bulkinsert_path="{}\\EIA".format(os.environ['ADUB_Import_Output'])
-            )
-        
-        self.seriesString = 'PET.WCESTUS1.W;PET.WCESTP11.W;PET.WCESTP21.W;PET.WCESTP31.W;PET.WCESTP41.W;PET.WCESTP51.W;PET.WCRIMUS2.W;PET.WCEIMP12.W;PET.WCEIMP22.W;PET.WCEIMP32.W;PET.WCEIMP42.W;PET.WCEIMP52.W;PET.WCREXUS2.W;PET.WCREXUS42.W;PET.WCRRIUS2.W;PET.WCRRIP12.W;PET.WCRRIP22.W;PET.WCRRIP32.W;PET.WCRRIP42.W;PET.WCRRIP52.W;PET.WCRFPUS2.W;PET.WCSSTUS1.W'
-        self.dataAccess = dtAccss.DataAccess(os.environ['ADUB_DBServer'], 'Analytics')
-
-        self.eiaImporter.truncateAll()
-
-    
-    # python -m unittest test_EiaImporter.EiaImporterCase.test_runSeries
-    def test_runSeries(self):              
-        self.assertIsNone(self.eiaImporter.runSeries(self.seriesString))
-
-    def test_runSeries_fromEiaSeriesShortname(self):              
-        self.assertIsNone(self.eiaImporter.runSeries())
-
-    def test_loadSeries(self):
-        self.assertIsNone(self.eiaImporter.loadSeries(self.seriesString, None, self.dataAccess))
 
 
 class EmailImporterCase(unittest.TestCase):
+    def setUp(self):
+        self.exchange_wrapper = ExchangeWrapper()
+        self.m = Message(
+            account=self.exchange_wrapper.account,
+            subject='ICE 1630 SGT Futures curve on 02-Mar-20_20200302',
+            body='Oil prices',
+            to_recipients=[
+                Mailbox(email_address='anne@example.com')
+            ],
+            datetime_received=datetime(2000, 1, 1, 12, 1, 30),
+        )
+        binary_file_content = 'Hello from unicode æøå'.encode('utf-8')  # Or read from file, BytesIO etc.
+
+        a = FileAttachment(
+            name='ICE 1630 SGT Brent Crude Futures curve on 02-Mar-20.csv',
+            content=binary_file_content
+        )
+
+        self.m.attach(a)
+
+        self.server = 'is mocked'
+        self.database = 'is mocked'
+        self.dataAccess = DataAccess('any', 'thing', is_unit_test=True)
+        self.dataAccess.cursor = MagicMock()
+        self.dataAccess.cursor.execute().fetchval.return_value = datetime.strftime(datetime(2000,1,1,12,0,0), '%Y-%m-%d')
+
+
     def test_SGTBrentCrude(self):
-        eiSGTBrentCrude.run()
+        with mock.patch('services.exchangeWrapper.ExchangeWrapper.get_emails') as mock_get_emails:
+            with mock.patch('helpers.dataAccess.DataAccess.get_max_database_date') as mock_get_max:
+                with mock.patch('importers.iceAttachments.import_from_directory') as mock_import_from_directory:
+                    mock_get_emails.return_value = [self.m]
+                    mock_get_max.return_value = datetime(2017,1,1,12,0,0)
+                    mock_import_from_directory.return_value = []
+                    self.assertIsNone(eiSGTBrentCrude.run())
 
-    def test_1930LSGasOil(self):
-        ei1930LSGasOil.run()
-
-    def test_ei1630Oil(self):
-        ei1630Oil.run()
-
-    def test_ei1630BrentCurve(self):
-        ei1630BrentCurve.run()
 
 class ExcelExtractorCase(unittest.TestCase):
     def setUp(self):
@@ -614,7 +336,7 @@ class ExcelExtractorCase(unittest.TestCase):
 
     def test_extract_files(self):
         file_list = [
-            'C:\\Dev\\Projects\\Analytics\\Python37\\adub\\tests\\data\\test_excel_extractor.xlsx'
+            'data\\test_excel_extractor.xlsx'
         ]
         
         json = {
@@ -805,7 +527,7 @@ class ExchangeWrapperCase(unittest.TestCase):
         )
 
         self.m.attach(a)
-        self.file_path = 'C:\Dev\Excel Files\ExchangeWrapper'
+        self.file_path = ''
 
         
 
@@ -821,59 +543,25 @@ class ExchangeWrapperCase(unittest.TestCase):
             self.assertEqual(result, self.m.subject)
 
     def test_save_email_attachments(self):
-        self.exchangeWrapper.save_email_attachments((self.m,), self.file_path)
+        self.exchangeWrapper.save_email_attachments((self.m,), self.file_path, [])
         time_delta = datetime.now() - datetime.utcfromtimestamp(os.path.getmtime(os.path.join(self.file_path, 'my_file_20000101.txt')))
         self.assertLess(time_delta.seconds, 100000)
 
     def test_save_attachment(self):
-        self.exchangeWrapper.save_attachment(self.m.attachments[0], self.file_path, datetime(2000, 1, 1, 12, 1, 30))
-        time_delta = datetime.now() - datetime.utcfromtimestamp(os.path.getmtime(os.path.join(self.file_path, 'my_file_20000101.txt')))
+        self.exchangeWrapper.save_attachment(
+            self.m.attachments[0], self.file_path, datetime(2000, 1, 1, 12, 1, 30), [])
+        time_delta = datetime.now() - datetime.utcfromtimestamp(
+            os.path.getmtime(os.path.join(self.file_path, 'my_file_20000101.txt')))
+        self.assertLess(time_delta.seconds, 100000)
+
+    def test_save_attachment_incorrect_directory_options(self):
+        self.exchangeWrapper.save_attachment(
+            self.m.attachments[0], self.file_path, datetime(2000, 1, 1, 12, 1, 30), [])
+        time_delta = datetime.now() - datetime.utcfromtimestamp(
+            os.path.getmtime(os.path.join(self.file_path, 'my_file_20000101.txt')))
         self.assertLess(time_delta.seconds, 100000)
 
     
-
-    def test_get_emails_live(self):
-        
-        for i in range (10):
-            q = Queue()
-            p = Process(target=get_email_bg, args=(q,i))
-            p.start()
-            time.sleep(1)
-
-def get_email_bg(q, i):
-    date = datetime(2020,2,5,12,0,0)
-    exchangeWrapper = ExchangeWrapper()
-    emails = exchangeWrapper.get_emails('ICE 1630 Oil Futures Curves', date)
-    exchangeWrapper.save_email_attachments(list(emails), os.path.join('C:\Dev\Excel Files\ExchangeWrapper', 'ICE'))
-
-class ICE_SettlementCleanerCase(unittest.TestCase):
-    def setUp(self):
-        self.d1 = pd.DataFrame({
-            'ContractDate':['Mar20', 'Apr-20','May-20'],
-            'Value':[1,2,3]
-        })
-
-        self.d2 = pd.DataFrame({
-            'ContractDate':['Mar20', 'Apr-20','May-20'],
-            'Value':[1,2,3],
-            'Asof':['01-03-2020','01-03-2020','01-03-2020'],
-            'Curve':['Curve 1', 'Curve 2', 'Curve 3']
-        })
-
-    def test_set_asof(self):
-        self.assertEqual(_set_asof(self.d1, datetime(2020, 1, 21, 12, 0, 0))['Asof'].iloc[0], '20200121')
-
-    def test_format_contract_column(self):
-        self.assertEqual(_format_contract_column(self.d1)['ContractDate'].iloc[0], '20200301')
-
-    def test_parse_contract_column(self):
-        self.assertEqual(_parse_contract_column('Mar20'), '20200301')
-
-    def test_set_curve_name_column(self):
-        self.assertEqual(_set_curve_name_column(self.d1, 'Test')['Curve'].iloc[0], 'Test')
-
-    def test_arrange_columns(self):
-        self.assertEqual(list(_arrange_columns(self.d2).columns), ['Curve','Asof','ContractDate','Value'])
 
 class IeaTxtCleanerCase(unittest.TestCase):
     # python -m unittest test_IeaTxtCleaner.IeaTxtCleanerCase.test_replaceInvalidQuantities
@@ -1016,15 +704,36 @@ class LogCase(unittest.TestCase):
     def test_log_error(self):
         self.assertIsInstance(log.error(__name__, 'test_log', "short function name"), str)
 
+
 class McQuillingCase(unittest.TestCase):
     def setUp(self):
-        
-        self.mcQuilling = McQuilling(
-            'Daily Freight Rate Assessment',
-            "{}\\McQuilling".format(os.environ['ADUB_Import_Path']),
-            database_server='Lon-Pc53',
-            database='Price'
+        self.exchangeWrapper = ExchangeWrapper()
+
+        self.m = Message(
+            account=self.exchangeWrapper.account,
+            subject='Daily motivation',
+            body='All bodies are beautiful',
+            to_recipients=[
+                Mailbox(email_address='anne@example.com'),
+                Mailbox(email_address='bob@example.com'),
+            ],
+            datetime_received=datetime(2000, 1, 1, 12, 1, 30),
+            cc_recipients=['carl@example.com', 'denice@example.com'],  # Simple strings work, too
+            bcc_recipients=[
+                Mailbox(email_address='erik@example.com'),
+                'felicity@example.com',
+            ],  # Or a mix of both
         )
+
+        binary_file_content = 'Hello from unicode æøå'.encode('utf-8')  # Or read from file, BytesIO etc.
+
+        a = FileAttachment(
+            name='my_file.txt',
+            content=binary_file_content
+        )
+
+        self.m.attach(a)
+        self.file_path = ''
 
         self.file_list = [
             'Daily Freight Rate Assessment_2019_20191113.xlsm',
@@ -1035,37 +744,25 @@ class McQuillingCase(unittest.TestCase):
             'Daily Freight Rate Assessment_2019_20191201.xlsm'
         ]
 
-    # python -m unittest test_basic.McQuillingCase.test_get_attachments
+        
     def test_get_attachments(self):
-        config = Configuration( 
-            service_endpoint=EXCHANGE_SERVER, credentials=Credentials(USERNAME, PASSWORD))
-        account = Account(ANALYTICS_EMAIL_ADDRESS, config=config, access_type=DELEGATE)
+        with mock.patch('importers.mcQuilling.McQuilling.get_emails') as mock_get_emails:
+            mock_get_emails.return_value = [self.m]
 
-        self.assertIsNone(
-            self.mcQuilling.get_attachments(
-                list(self.mcQuilling.get_emails(datetime.strptime(str(20191213), '%Y%m%d'), 'Daily Freight Rate Assessment', account)), self.mcQuilling.file_path))  
+            self.assertIsNone(
+                mcQuilling.get_attachments(
+                    list(mcQuilling.get_emails(datetime.strptime(str(20191213), '%Y%m%d'), 'Daily Freight Rate Assessment', None)), 'data'))  
 
-    # python -m unittest test_basic.McQuillingCase.test_run
-    def test_run(self):
-        self.assertIsNone(self.mcQuilling.run())
-
-    # python -m unittest test_basic.McQuillingCase.test_run_with_bad_path
-    def test_run_with_bad_path(self):
-        temp_path = self.mcQuilling.file_path
-        self.mcQuilling.file_path = "bad_path"
-        self.assertIsNone(self.mcQuilling.run())
-        self.mcQuilling.file_path = temp_path
-
-    # python -m unittest test_basic.McQuillingCase.test_get_max_file_date
+   
     def test_get_max_file_date(self):
-        self.assertEqual(self.mcQuilling.get_max_file_date(self.file_list), 20191201)
+        self.assertEqual(mcQuilling.get_max_file_date(self.file_list), 20191201)
+        
 
-    # python -m unittest test_basic.McQuillingCase.test_get_max_file_date_with_bad_file_name
     def test_get_max_file_date_with_bad_file_name(self):
-        self.assertEqual(self.mcQuilling.get_max_file_date(self.bad_file_list), 20191201)
+        self.assertEqual(mcQuilling.get_max_file_date(self.bad_file_list), 20191201)
 
-class RystadCleanerCase(unittest.TestCase):
-    
+
+class RystadCleanerCase(unittest.TestCase):    
     def setUp(self):
         self.testData = """
             2018|August|Not specified|United Kingdom|Crude Oil|Sweet|0.2|Production|10
@@ -1117,7 +814,7 @@ class RystadCleanerCase(unittest.TestCase):
 
 class UtilsCase(unittest.TestCase):
     def setUp(self):
-        self.file_path = 'C:\\Dev\\Projects\\Analytics\\Python37\\adub\\tests\\data'
+        self.file_path = 'tests\\data'
 
     def test_get_date_from_string_no_date(self):        
         date = get_date_from_string("no_date")
@@ -1144,19 +841,13 @@ class UtilsCase(unittest.TestCase):
         self.assertGreater(date, 20000101)
 
     def test_insert_datestamp_in_filename(self):
-        string = insert_datestamp_in_filename('C:\Dev', 'Test.xlsx', datetime(2000, 1, 1, 12, 1, 1))
-        self.assertEqual(string, 'C:\Dev\Test_20000101.xlsx')
+        string = insert_datestamp_in_filename(self.file_path, 'Test.xlsx', datetime(2000, 1, 1, 12, 1, 1))
+        self.assertEqual(string, os.path.join(self.file_path, 'Test_20000101.xlsx'))
 
-    def test_load_json(self):
-        test_data = {'name': 'ASSESSMENTS'}
-        
-        self.assertEqual(
-            test_data, 
-            load_json('C:\\Dev\\Projects\\Analytics\\Python37\\adub\\tests\\data\\test.json'))
-
+    
     def test_load_json_invalid_file(self):
         try:
-            load_json('C:\\Dev\\Projects\\Analytics\\Python37\\adub\\tests\\data\\test')
+            load_json(os.path.join(self.file_path, 'test'))
         except ValueError as e:
             self.assertEqual(
                 ValueError, 
@@ -1166,11 +857,7 @@ class UtilsCase(unittest.TestCase):
         list_string = ["no_date","date_14-Jan-17","date_16-Jan-2018","140119M2M"]
         self.assertEqual(get_max_file_date(list_string), 20190114)
 
-    def test_write_to_csv(self):
-        write_to_csv([{},], os.path.join(self.file_path, 'test.csv'))
-        time_delta = datetime.now() - datetime.utcfromtimestamp(os.path.getmtime(os.path.join(self.file_path, 'test.csv')))
-        self.assertLess(time_delta.seconds, 100000)
-
+   
     def test_files_later_than(self):
         list_string = ["no_date","date_14-Jan-17","date_16-Jan-2018","140119M2M"]
         list_string_result = ["date_16-Jan-2018","140119M2M"]
@@ -1191,7 +878,6 @@ class UtilsCase(unittest.TestCase):
             'id': ['1','2','3'],
             'date': ['20100101'],
         }
-        print(get_unique_values_for_dataframe_keys(df, keys))
         self.assertEqual(get_unique_values_for_dataframe_keys(df, keys), expect)
 
     def test_get_unique_values_for_dataframe_keys_YYYYMMDD_wrong_order_keys(self):
@@ -1209,7 +895,6 @@ class UtilsCase(unittest.TestCase):
             'value':['a','b','c'],
             'date': ['20100122','20100102'],
         }
-        print(get_unique_values_for_dataframe_keys(df, keys))
         self.assertEqual(get_unique_values_for_dataframe_keys(df, keys), expect)
 
     def test_get_unique_values_for_dataframe_keys_YYYYMMDD(self):
@@ -1228,11 +913,10 @@ class UtilsCase(unittest.TestCase):
             'date': ['20100122','20100102'],
             'value':['a','b','c']
         }
-        print(get_unique_values_for_dataframe_keys(df, keys))
         self.assertEqual(get_unique_values_for_dataframe_keys(df, keys), expect)
 
 
-class priceReturnsCase(unittest.TestCase):
+class PriceReturnsCase(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
         # Data definitions
@@ -1263,6 +947,22 @@ class priceReturnsCase(unittest.TestCase):
         self.quote14 = quote(1961,'2020-03-31','2020-04-01', 2,85.5)
         self.quote14a = quote(1961,'2020-03-31','2020-05-01', 3,85.4)
         self.quote15 = quote(1961,'2020-04-01','2020-05-01', 2,90.3)
+
+        self.quote19a = quote(1961,'2019-12-29','2020-02-01', 1,68.16)
+        self.quote19b = quote(1961,'2019-12-29','2020-03-01', 2,66.87)
+        self.quote19c = quote(1961,'2019-12-29','2020-04-01', 3,66.14)
+        self.quote20a = quote(1961,'2019-12-30','2020-02-01', 1,68.44)
+        self.quote20b = quote(1961,'2019-12-30','2020-03-01', 2,66.67)
+        self.quote20c = quote(1961,'2019-12-30','2020-04-01', 3,65.99)
+        self.quote21a = quote(1961,'2019-12-31','2020-03-01', 1,66)
+        self.quote21b = quote(1961,'2019-12-31','2020-04-01', 2,65.29)
+        self.quote21c = quote(1961,'2019-12-31','2020-05-01', 3,64.68)
+        self.quote22a = quote(1961,'2020-01-02','2020-03-01', 1,66.25)
+        self.quote22b = quote(1961,'2020-01-02','2020-04-01', 2,65.56)
+        self.quote22c = quote(1961,'2020-01-02','2020-05-01', 3,64.97)
+        self.quote23a = quote(1961,'2020-01-03','2020-03-01', 1,68.6)
+        self.quote23b = quote(1961,'2020-01-03','2020-04-01', 2,67.76)
+        self.quote23c = quote(1961,'2020-01-03','2020-05-01', 3,67.05)
 
         def fn_for_quote(q):
             q.Instrument        # str
@@ -1301,6 +1001,8 @@ class priceReturnsCase(unittest.TestCase):
         self.expiry1 = expiry('North Sea','2020-01-01','2020-01-31')
         self.expiry2 = expiry('North Sea','2020-02-01','2020-02-28')
         self.expiry3 = expiry('North Sea','2020-03-01','2020-03-31')
+
+        self.expiry20 = expiry('North Sea',None,'2019-12-30')
 
         def fn_for_expiry(e):
             if(e is False):
@@ -1454,6 +1156,111 @@ class priceReturnsCase(unittest.TestCase):
             'Asof': self.quote15.Asof,                    
             'M': 2,
             'Value': self.quote15.Value
+        }
+
+        self.value19a = {
+            'Instrument': self.quote19a.IdInstrument,
+            'Asof': self.quote19a.Asof,                    
+            'M': 1,
+            'Value': self.quote19a.Value
+        }
+
+        self.value19b = {
+            'Instrument': self.quote19b.IdInstrument,
+            'Asof': self.quote19b.Asof,                    
+            'M': 2,
+            'Value': self.quote19b.Value
+        }
+
+        self.value19c = {
+            'Instrument': self.quote19c.IdInstrument,
+            'Asof': self.quote19c.Asof,                    
+            'M': 3,
+            'Value': self.quote19c.Value
+        }
+
+        self.value20a = {
+            'Instrument': self.quote20a.IdInstrument,
+            'Asof': self.quote20a.Asof,                    
+            'M': 1,
+            'Value': self.quote20a.Value
+        }
+
+        self.value20b = {
+            'Instrument': self.quote20b.IdInstrument,
+            'Asof': self.quote20b.Asof,                    
+            'M': 2,
+            'Value': self.quote20b.Value
+        }
+
+        self.value20c = {
+            'Instrument': self.quote20c.IdInstrument,
+            'Asof': self.quote20c.Asof,                    
+            'M': 3,
+            'Value': self.quote20c.Value
+        }
+
+        self.value21a = {
+            'Instrument': self.quote21a.IdInstrument,
+            'Asof': self.quote21a.Asof,                    
+            'M': 1,
+            'Value': self.quote21a.Value
+        }
+
+        self.value21b = {
+            'Instrument': self.quote21b.IdInstrument,
+            'Asof': self.quote21b.Asof,                    
+            'M': 2,
+            'Value': self.quote21b.Value
+        }
+
+        self.value21c = {
+            'Instrument': self.quote21c.IdInstrument,
+            'Asof': self.quote21c.Asof,                    
+            'M': 3,
+            'Value': self.quote21c.Value
+        }
+
+        self.value22a = {
+            'Instrument': self.quote22a.IdInstrument,
+            'Asof': self.quote22a.Asof,                    
+            'M': 1,
+            'Value': self.quote22a.Value
+        }
+
+        self.value22b = {
+            'Instrument': self.quote22b.IdInstrument,
+            'Asof': self.quote22b.Asof,                    
+            'M': 2,
+            'Value': self.quote22b.Value
+        }
+
+        self.value22c = {
+            'Instrument': self.quote22c.IdInstrument,
+            'Asof': self.quote22c.Asof,                    
+            'M': 3,
+            'Value': self.quote22c.Value
+        }
+
+        self.value23a = {
+            'Instrument': self.quote23a.IdInstrument,
+            'Asof': self.quote23a.Asof,                    
+            'M': 1,
+            'Value': self.quote23a.Value
+        }
+
+        self.value23b = {
+            'Instrument': self.quote23b.IdInstrument,
+            'Asof': self.quote23b.Asof,                    
+            'M': 2,
+            'Value': self.quote23b.Value
+        }
+
+        self.value23c = {
+            'Instrument': self.quote23c.IdInstrument,
+            'Asof': self.quote23c.Asof,                    
+            'M': 3,
+            'Value': self.quote23c.Value
         }
 
         ## ListValues is one of    
@@ -1791,6 +1598,7 @@ class priceReturnsCase(unittest.TestCase):
         # self.quote14 = quote(1961,'2020-03-31','2020-04-01', 2,85)
         # self.quote14a = quote(1961,'2020-03-31','2020-05-01', 3,85)
         # self.quote15 = quote(1961,'2020-04-01','2020-05-01', 2,90)
+        
         self.assertEqual(get_returns_for_curves([self.quote13, self.quote12, self.quote11, self.quote10b, self.quote10, self.quote10a, self.quote9a], [self.expiry1, self.expiry2, self.expiry3]),
             [
                 [
@@ -1842,6 +1650,146 @@ class priceReturnsCase(unittest.TestCase):
                 ]
             ]
         )
+
+    def test_get_returns_for_curves_new_year(self):
+        
+        self.assertEqual(
+            get_returns_for_curves(
+                [
+                    self.quote23a,
+                    self.quote23b,
+                    self.quote23c,
+                    self.quote22a,
+                    self.quote22b,
+                    self.quote22c,
+                    self.quote21a,
+                    self.quote21b,
+                    self.quote21c,
+                    self.quote20a,
+                    self.quote20b,
+                    self.quote20c,
+                    self.quote19a,
+                    self.quote19b,
+                    self.quote19c,
+                ], 
+                [
+                    self.expiry20
+                ],
+                is_double_proxy=True
+            ),
+            # self.quote19a = quote(1961,'2019-12-29','2020-02-01', 1,68.16)
+            # self.quote19b = quote(1961,'2019-12-29','2020-03-01', 2,66.87)
+            # self.quote19c = quote(1961,'2019-12-29','2020-04-01', 3,66.14)
+            # self.quote20a = quote(1961,'2019-12-30','2020-02-01', 1,68.44)
+            # self.quote20b = quote(1961,'2019-12-30','2020-03-01', 2,66.67)
+            # self.quote20c = quote(1961,'2019-12-30','2020-04-01', 3,65.99)
+            # self.quote21a = quote(1961,'2019-12-31','2020-03-01', 1,66)
+            # self.quote21b = quote(1961,'2019-12-31','2020-04-01', 2,65.29)
+            # self.quote21c = quote(1961,'2019-12-31','2020-05-01', 3,64.68)
+            # self.quote22a = quote(1961,'2020-01-02','2020-03-01', 1,66.25)
+            # self.quote22b = quote(1961,'2020-01-02','2020-04-01', 2,65.56)
+            # self.quote22c = quote(1961,'2020-01-02','2020-05-01', 3,64.97)
+            # self.quote23a = quote(1961,'2020-01-03','2020-03-01', 1,68.6)
+            # self.quote23b = quote(1961,'2020-01-03','2020-04-01', 2,67.76)
+            # self.quote23c = quote(1961,'2020-01-03','2020-05-01', 3,67.05)
+            [
+                [
+                    {
+                        'Instrument': self.quote23a.IdInstrument,
+                        'Asof': self.quote23a.Asof,                    
+                        'M': 1,
+                        'Value': self.calc_returns(self.quote23a.Value, self.quote22a.Value)
+                    },
+                    {
+                        'Instrument': self.quote22a.IdInstrument,
+                        'Asof': self.quote22a.Asof,                    
+                        'M': 1,
+                        'Value': self.calc_returns(self.quote22a.Value, self.quote21a.Value)
+                    },
+                    {
+                        'Instrument': self.quote21a.IdInstrument,
+                        'Asof': self.quote21a.Asof,                    
+                        'M': 1,
+                        'Value': self.calc_returns(self.quote21a.Value, self.quote20b.Value)
+                    },
+                    {
+                        'Instrument': self.quote20a.IdInstrument,
+                        'Asof': self.quote20a.Asof,                    
+                        'M': 1,
+                        'Value': self.calc_returns(self.quote20b.Value, self.quote19b.Value)
+                    },
+                    {
+                        'Instrument': self.quote19a.IdInstrument,
+                        'Asof': self.quote19a.Asof,                    
+                        'M': 1,
+                        'Value': self.calc_returns(self.quote19a.Value, 1) # no further quotes in test
+                    }  
+                ],[
+                    {
+                        'Instrument': self.quote23b.IdInstrument,
+                        'Asof': self.quote23b.Asof,                    
+                        'M': 2,
+                        'Value': self.calc_returns(self.quote23b.Value, self.quote22b.Value)
+                    },
+                    {
+                        'Instrument': self.quote22b.IdInstrument,
+                        'Asof': self.quote22b.Asof,                    
+                        'M': 2,
+                        'Value': self.calc_returns(self.quote22b.Value, self.quote21b.Value)
+                    },
+                    {
+                        'Instrument': self.quote21b.IdInstrument,
+                        'Asof': self.quote21b.Asof,                    
+                        'M': 2,
+                        'Value': self.calc_returns(self.quote21b.Value, self.quote20c.Value)
+                    },
+                    {
+                        'Instrument': self.quote20b.IdInstrument,
+                        'Asof': self.quote20b.Asof,                    
+                        'M': 2,
+                        'Value': self.calc_returns(self.quote20b.Value, self.quote19b.Value)
+                    },
+                    {
+                        'Instrument': self.quote19b.IdInstrument,
+                        'Asof': self.quote19b.Asof,                    
+                        'M': 2,
+                        'Value': self.calc_returns(self.quote19b.Value, 1) # no further quotes in test
+                    }  
+                ],[
+                    {
+                        'Instrument': self.quote23c.IdInstrument,
+                        'Asof': self.quote23c.Asof,                    
+                        'M': 3,
+                        'Value': self.calc_returns(self.quote23c.Value, self.quote22c.Value)
+                    },
+                    {
+                        'Instrument': self.quote22c.IdInstrument,
+                        'Asof': self.quote22c.Asof,                    
+                        'M': 3,
+                        'Value': self.calc_returns(self.quote22c.Value, self.quote21c.Value) 
+                    },
+                    {
+                        'Instrument': self.quote21c.IdInstrument,
+                        'Asof': self.quote21c.Asof,                    
+                        'M': 3,
+                        'Value': self.calc_returns(self.quote21c.Value, self.quote20c.Value) 
+                    },
+                    {
+                        'Instrument': self.quote20c.IdInstrument,
+                        'Asof': self.quote20c.Asof,                    
+                        'M': 3,
+                        'Value': self.calc_returns(self.quote20c.Value, self.quote19c.Value)
+                    },
+                    {
+                        'Instrument': self.quote19c.IdInstrument,
+                        'Asof': self.quote19c.Asof,                    
+                        'M': 3,
+                        'Value': self.calc_returns(self.quote19c.Value, 1) # no further quotes in test
+                    }  
+                ]                                
+            ]
+        )
+
 
 
     

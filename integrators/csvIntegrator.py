@@ -14,7 +14,8 @@ class CsvIntegrator(object):
     def __init__(self, name, server, database, file_path, output_file_path, table_name, 
                     file_name=None, file_columns=None, table_columns=None, clean=None, 
                         truncate=True, keys = None, clean_arg= None, delimiter=None, 
-                        post_op_procedure=None, needs_asof=False, file_part=None):
+                        post_op_procedure=None, needs_asof=False, file_part=None,
+                        post_op_params=None):
         self.name = name # Name for this integrator, to appear in logs and emails
         self.server = server # Server name
         self.database = database 
@@ -30,6 +31,7 @@ class CsvIntegrator(object):
         self.clean = clean # [OPTIONAL] Function for cleaning the data for this Integrator
         self.keys = keys # [OPTIONAL] Columns used to identify unique rows in the data file
         self.post_op_procedure = post_op_procedure # [OPTIONAL] a stored procedure to execute
+        self.post_op_params = post_op_params # [OPTIONAL] the params for the stored procedure
         self.clean_arg=clean_arg
         self.needs_asof=needs_asof
         self.delimiter=delimiter
@@ -44,7 +46,7 @@ class CsvIntegrator(object):
     def __integrate__(self, modified_file, **kwargs):
         try:
             modified_file_name = modified_file.split('\\')[-1]
-            print(modified_file_name)
+            
             if(self.file_name is not None): # a file name has been provided for this integrator, only process this file
                 if(self.file_name.lower() != modified_file_name.lower()):
                     return
@@ -70,7 +72,7 @@ class CsvIntegrator(object):
             self.__saveToDB__(df, modified_file_name, self.table_name, **kwargs)
             
             if(self.post_op_procedure is not None):
-                self.__post_op_procedure__(self.post_op_procedure)
+                self.__post_op_procedure__(self.post_op_procedure, self.post_op_params)
             
             log(__name__, '__integrate__', f"{self.name} has completed and {modified_file_name} has been imported", level="Info", email=True, emailSubject=self.name)
         except Exception as e:
@@ -105,9 +107,9 @@ class CsvIntegrator(object):
 
         dataAccess.bulkInsert(table_name, output_full_path, truncate=self.truncate)
 
-    def __post_op_procedure__(self, proc_name):
+    def __post_op_procedure__(self, proc_name, params=[]):
         dataAccess = dtAccss.DataAccess(self.server, self.database)
         
-        dataAccess.executeStoredProcedure(proc_name, [])
+        dataAccess.executeStoredProcedure(proc_name, params)
 
     

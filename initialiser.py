@@ -2,6 +2,7 @@ import services.brokerReceiver as brkrRcvr
 import services.importWatcher as wtchr
 import services.jobScheduler as jobSchdlr
 from importers.arcPrices import run_daily_prices
+from services.validator import validate
 import datetime
 import logging
 import copy
@@ -39,15 +40,6 @@ class Initialiser(object):
     def startMcQuillingWatcher(self):
         wtchr.watch('McQuilling Assessments', mcQuillingIntegrator)
 
-    def startICEWatchers(self):
-        wtchr.watch('ICE 1630 SGT Brent Crude Futures', SGTBrentCrude)
-        wtchr.watch('ICE 1630 LS Gas Oil Futures', SGTLSGasOil)
-        wtchr.watch('ICE 1930 LS Gas Oil Futures', LSGasOil1930)
-        wtchr.watch('ICE 1630 WTI Crude Futures', WTICrude)
-        wtchr.watch('ICE 1630 Heating Oil Futures', HeatingOil)
-        wtchr.watch('ICE 1630 (RBOB) Gasoline Futures', RBOB)
-        wtchr.watch('ICE 1630 Brent Crude Futures', BrentCrude1630)
-
     def startIeaWatchers(self):
         wtchr.watch('IEA Supply', ieaSupplyIntegrator)
         wtchr.watch('IEA Stock Data', ieaStockdatIntegrator)
@@ -79,6 +71,12 @@ class Initialiser(object):
         scheduler = schedule.every().day.at("06:00").do(run_daily_prices).scheduler
         eiaScheduler = jobSchdlr.JobScheduler('Price Import', scheduler)
         eiaScheduler.schedule()  
+
+    def startValidatorScheduler(self):     
+        #scheduler = schedule.every(5).minutes.do(validate).scheduler
+        scheduler = schedule.every().day.at("10:00").do(validate).scheduler
+        validatorScheduler = jobSchdlr.JobScheduler('Validator', scheduler)
+        validatorScheduler.schedule()  
 
     def startMcQuillingImportScheduler(self):
         #scheduler = schedule.every(10).minutes.do(mcQuilling.run).scheduler
