@@ -152,7 +152,7 @@ def get_env_dict(env_name, remote=False):
         d["target_server"] = "Lon-PC53"
         d["source_db_schema"] = "ARC_DOCDROP.dbo"
         d["target_db_schema"] = "Price.import"
-        d["file_path"] = "d:\\temp"
+        d["file_path"] = "c:\\temp"
 
 
     elif ('test' in env_name.lower().strip()):
