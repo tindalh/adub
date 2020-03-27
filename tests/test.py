@@ -8,10 +8,9 @@ import pandas as pd
 import numpy
 import sys
 import os
-from datetime import datetime, date
 import xlrd
 from exchangelib import DELEGATE, NTLM, Configuration, Credentials, Account, FileAttachment, EWSDateTime, Mailbox, Message
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, patch, mock_open
 from unittest import mock
 from multiprocessing import Process, Queue
 
@@ -31,10 +30,7 @@ from helpers.csvHelper import getDataframe, extract_dataframe
 from helpers.dataAccess import DataAccess
 from helpers.log import log as old_log
 import helpers.log as log
-from helpers.utils import get_date_from_string, insert_datestamp_in_filename, \
-    load_json, get_max_file_date, write_to_csv, files_later_than, \
-    get_unique_values_for_dataframe_keys
-#import importers.eiaImporter as eia
+from helpers.utils import *
 from importers.emailImporter import EmailImporter
 from services.excelExtractor import extract_files, _extract_sections, \
     _extract_blocks, _extract_rows, _extract_columns, _get_block_start, \
@@ -45,7 +41,11 @@ from exchangelib import DELEGATE,Configuration, Credentials, Account, FileAttach
 from constants import ANALYTICS_EMAIL_ADDRESS, EXCHANGE_SERVER, TARGO_DB_NAME
 from service_constants import *
 from importers.mcQuilling import McQuilling
+from importers.iceAttachments import *
 from cred_secrets import USERNAME, PASSWORD
+from datetime import datetime, date
+from helpers.log import log as old_log
+import helpers.log as log
 
 
 class TestClipperFloatingStorageCleaner(unittest.TestCase):
@@ -195,7 +195,7 @@ class EmailImporterCase(unittest.TestCase):
     def test_SGTBrentCrude(self):
         with mock.patch('services.exchangeWrapper.ExchangeWrapper.get_emails') as mock_get_emails:
             with mock.patch('helpers.dataAccess.DataAccess.get_max_database_date') as mock_get_max:
-                with mock.patch('importers.iceAttachments.import_from_directory') as mock_import_from_directory:
+                with mock.patch('helpers.utils.get_list_from_directory_csv_files') as mock_import_from_directory:
                     mock_get_emails.return_value = [self.m]
                     mock_get_max.return_value = datetime(2017,1,1,12,0,0)
                     mock_import_from_directory.return_value = []
@@ -904,6 +904,52 @@ class UtilsCase(unittest.TestCase):
             'value':['a','b','c']
         }
         self.assertEqual(get_unique_values_for_dataframe_keys(df, keys), expect)
+
+    def test_list_to_csv(self):
+        list_data = ['1','2']
+        self.assertIsNone(list_to_csv(list_data, os.path.join(get_project_root(), self.file_path) + '\\test_list_to_csv.csv'))
+
+
+    def test_get_list_from_directory_csv_files(self):
+        mock_csv = "1|first\n2|second"
+        max_saved = datetime(2010, 1, 1, 0, 0, 0)
+        with patch('os.listdir') as mock_listdir:
+            with patch('builtins.open', mock_open(read_data=mock_csv)) as m_open:
+                mock_listdir.return_value = ['file_20200101.csv', 'file_20000101.csv']
+
+                self.assertEqual(get_list_from_directory_csv_files('test', max_saved, lambda data, d, dt_str: data), [['1|first'], ['2|second']])
+
+
+class IceAttachmentsCase(unittest.TestCase):
+    def test_parse_contract_column(self):
+        self.assertEqual(parse_contract_column('Mar20'), '20200301')
+
+    def test_get_data_list(self):
+        rows = [
+            [
+                'Mar20',
+                '1'
+            ], [
+                'Mar20',
+                '2'
+            ]
+        ]
+        directory ='root\\child'
+        file_name ='file_with_date_20210103.csv'
+
+        self.assertEqual(get_data_list(rows, directory, '20210103'), 
+             [
+                 ['child', '20210103', '20200301', '1'], 
+                 ['child', '20210103', '20200301','2']
+            ]
+        )
+
+    def test_get_max_date_imported(self):
+        dataAccess = DataAccess('any', 'thing', is_unit_test=True)
+        dataAccess.get_max_database_date = MagicMock()
+        dataAccess.get_max_database_date.return_value = datetime(2010, 1, 1, 0, 0, 0)
+            
+        self.assertEqual(get_max_date_imported(dataAccess, 'table', ['curve']), datetime(2010, 1, 1, 0, 0, 0))
 
 
 class PriceReturnsCase(unittest.TestCase):
