@@ -7,6 +7,7 @@ import csv
 import pandas as pd
 from helpers.log import log
 
+
 def get_project_root() -> Path:
     """Returns project root folder."""
     return Path(__file__).parent.parent
@@ -54,6 +55,27 @@ def load_json(file_path):
     
     with open(file_path) as json_file:
         return json.load(json_file)
+
+def get_list_from_directory_csv_files(directory, max_saved, fn_get_list_from_file):
+    """
+        str datetime (list str str -> list) -> list
+        Gets a list from the files in a directory greater than the given date
+        ASSUME: files are all csv
+    """
+    list_data = []
+    for filename in os.listdir(directory):
+        if(datetime.datetime.strptime(str(get_date_from_string(filename)), '%Y%m%d') > max_saved):
+            with open(os.path.join(directory, filename)) as f:
+                reader = csv.reader(f)
+                data = fn_get_list_from_file(list(reader), directory, get_date_from_string(filename))
+                list_data.extend(data)
+    return list_data
+
+# List -> CSV
+def list_to_csv(list_data, file_name):
+    with open(file_name, 'w', newline='') as f:
+        writer = csv.writer(f, delimiter='|')
+        writer.writerows(list_data)
 
 
 # list(dict) string -> None

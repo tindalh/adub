@@ -20,7 +20,7 @@ def log(moduleName, functionName, message, level='Info', email=False, emailSubje
         logging.error(logMessage)
 
     if(email and 'arcpet' in os.environ["userdomain"].lower() ):
-        if(os.environ['ADUB_DBServer'].lower() != PRODUCTION_DB_SERVER):
+        if(os.environ['ADUB_DBServer'].lower() != PRODUCTION_DB_SERVER.lower()):
             emailSubject = 'TEST ' + emailSubject
             
         analyticsEmail.sendEmail(level, emailSubject, message, emailTable)
@@ -55,7 +55,7 @@ def error_email(moduleName, functionName, message):
     logging.error(logMessage)
 
     if(INTERNAL_DOMAIN.lower() in os.environ["userdomain"].lower() ):
-        if(os.environ['ADUB_DBServer'].lower() != PRODUCTION_DB_SERVER):
+        if(os.environ['ADUB_DBServer'].lower() != PRODUCTION_DB_SERVER.lower()):
             emailSubject = 'TEST ' + emailSubject
             
         analyticsEmail.sendEmail("Error", moduleName + '.' + functionName, message)

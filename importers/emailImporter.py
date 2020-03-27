@@ -38,9 +38,10 @@ class EmailImporter(object):
             
             exchangeWrapper = ExchangeWrapper()
                 
+            data_access = DataAccess(self.database_server, self.database)
             list_emails = exchangeWrapper.get_emails(
                 self.email_subject, \
-                    self.fn_get_max_saved(self.database_server, self.database, self.table_name, self.file_parts))
+                    self.fn_get_max_saved(data_access, self.table_name, self.file_parts))
 
             exchangeWrapper.save_email_attachments(list(list_emails), self.file_path, self.file_parts)
 
