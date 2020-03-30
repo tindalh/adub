@@ -14,7 +14,6 @@ from constants import EXCHANGE_SERVER, ANALYTICS_EMAIL_ADDRESS
 import pandas as pd
 import csv
 
-
 class McQuilling(object):
     def __init__(self, email_subject, file_path, database_server, database):
         self.email_subject = email_subject

@@ -14,8 +14,6 @@ import pyodbc
 from os import walk
 
 from decimal import Decimal
-from cred_secrets import USERNAME, PASSWORD
-from constants import EXCHANGE_SERVER, EMAIL_ADDRESS
 import pandas as pd
 import csv
 

@@ -12,6 +12,7 @@ from constants import ANALYTICS_EMAIL_ADDRESS, EXCHANGE_SERVER
 
 class ExchangeWrapper:
     def __init__(self):
+        
         self.config = Configuration(
             service_endpoint=EXCHANGE_SERVER, retry_policy=FaultTolerance(max_wait=3600), credentials=Credentials(USERNAME, PASSWORD))
         self.account = Account(ANALYTICS_EMAIL_ADDRESS, config=self.config, access_type=DELEGATE)

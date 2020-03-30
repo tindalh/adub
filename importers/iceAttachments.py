@@ -16,7 +16,7 @@ def import_ICE_attachments(file_parts):
         db_table_name = 'ICE_Settlement_Curve'
         root_directory = os.path.join(os.environ['ADUB_Import_Path'], 'ICE_Settlement')
 
-        output_directory = os.path.join(os.environ['ADUB_Import_Output'], 'ICE_Settlement', file_name)
+        output_directory = os.path.join(os.environ['ADUB_Import_Output_UNC'], 'ICE_Settlement', file_name)
         curve_part = file_name
 
         max_imported = get_max_date_imported(data_access, db_table_name, [curve])
