@@ -915,7 +915,7 @@ class UtilsCase(unittest.TestCase):
         max_saved = datetime(2010, 1, 1, 0, 0, 0)
         with patch('os.listdir') as mock_listdir:
             with patch('builtins.open', mock_open(read_data=mock_csv)) as m_open:
-                mock_listdir.return_value = ['file_20200101.csv', 'file_20000101.csv']
+                mock_listdir.return_value = ['file_20200101.csv', 'same_date_file_20200101.csv', 'file_20000101.csv']
 
                 self.assertEqual(get_list_from_directory_csv_files('test', max_saved, lambda data, d, dt_str: data), [['1|first'], ['2|second']])
 
@@ -944,6 +944,7 @@ class IceAttachmentsCase(unittest.TestCase):
             ]
         )
 
+    
     def test_get_max_date_imported(self):
         dataAccess = DataAccess('any', 'thing', is_unit_test=True)
         dataAccess.get_max_database_date = MagicMock()

@@ -60,16 +60,26 @@ def get_list_from_directory_csv_files(directory, max_saved, fn_get_list_from_fil
     """
         str datetime (list str str -> list) -> list
         Gets a list from the files in a directory greater than the given date
-        ASSUME: files are all csv
+        ASSUME: 
+            - files are csv
+            - 1 file per date
     """
     list_data = []
-    for filename in os.listdir(directory):
-        if(datetime.datetime.strptime(str(get_date_from_string(filename)), '%Y%m%d') > max_saved):
-            with open(os.path.join(directory, filename)) as f:
-                reader = csv.reader(f)
-                data = fn_get_list_from_file(list(reader), directory, get_date_from_string(filename))
-                list_data.extend(data)
+    list_processed_dates = []
+    list_files = sorted(os.listdir(directory), key=lambda item: item.split('_')[-1], reverse=True)
+
+    for filename in list_files:
+        date_str = str(get_date_from_string(filename))
+
+        if(datetime.datetime.strptime(date_str, '%Y%m%d') > max_saved):
+            if(date_str not in list_processed_dates):
+                with open(os.path.join(directory, filename)) as f:
+                    reader = csv.reader(f)
+                    data = fn_get_list_from_file(list(reader), directory, get_date_from_string(filename))
+                    list_data.extend(data)
+                    list_processed_dates.append(date_str)
     return list_data
+
 
 # List -> CSV
 def list_to_csv(list_data, file_name):
