@@ -6,7 +6,7 @@ import os
 import fnmatch
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from helpers.log import log
+from helpers.log import info, error_email
 
 def watch(name, importer):  
     """
@@ -17,7 +17,7 @@ def watch(name, importer):
     process.start() 
 
 def __startDirectoryWatch__(name, importerFunc, file_path, file_name = None):
-    log(__name__, 'startDirectoryWatch', f"Watching {name} in {file_path}")
+    info(__name__, 'startDirectoryWatch', f"Watching {name} in {file_path}")
     
     event_handler = WatchdogHandler(importerFunc, file_name)
     observer = Observer()
@@ -37,29 +37,27 @@ class WatchdogHandler(FileSystemEventHandler):
         FileSystemEventHandler.__init__(self)        
 
     def on_modified(self, event):
-        if(self.file_name and event.src_path.split('\\')[-1].lower() != self.file_name.lower()):
-           
-            return
+        try:
+            if(self.file_name and event.src_path.split('\\')[-1].lower() != self.file_name.lower()):            
+                return
 
-        diff = int(time.time()) - int(self.lastModified.get(event.src_path, time.time() - 10))
-        if (os.path.isfile(event.src_path) and diff > 9):            
-            while True:
-                try:
-                    new_path= event.src_path + "_"
-                    os.rename(event.src_path,new_path)
-                    os.rename(new_path,event.src_path)
-                    time.sleep(0.3)
-                    break
-                except OSError as e:
-                    time.sleep(0.05)
+            diff = int(time.time()) - int(self.lastModified.get(event.src_path, time.time() - 10))
+            if (os.path.isfile(event.src_path) and diff > 9):            
+                while True:
+                    try:
+                        new_path= event.src_path + "_"
+                        os.rename(event.src_path,new_path)
+                        os.rename(new_path,event.src_path)
+                        time.sleep(0.3)
+                        break
+                    except OSError as e:
+                        time.sleep(0.05)
 
-            self.lastModified[event.src_path] = time.time()   
-            #log(__name__, 'on_modified', f"Running importer for {event.src_path}") 
-            
-            try:
+                self.lastModified[event.src_path] = time.time()   
+              
                 self.functionToRun(event.src_path) 
-            except Exception as e:
-                log(__name__, 'on_modified', f"Error: {str(e)}", 'Error', True, 'ImportWatcher')
+        except Exception as e:
+            error_email(__name__, 'on_modified', f"Import Watcher error: {str(e)}")
 
     
         
