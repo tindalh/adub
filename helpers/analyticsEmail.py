@@ -22,6 +22,13 @@ def sendEmail(type, subject, body, table=""):
     msg = MIMEText(f"<html><body><p>Dear Analyst,</p><p>{body}</p>{table}</body></html>", 'html')
     message.attach(msg)
 
-    smptServer = smtplib.SMTP('10.20.20.20')
-    smptServer.send_message(message)
-    smptServer.quit()
+    
+
+    try:
+        smptServer = smtplib.SMTP('10.20.20.20')
+        smptServer.send_message(message)
+        smptServer.quit()
+    except Exception as e:
+        raise e
+
+    

@@ -23,7 +23,11 @@ def log(moduleName, functionName, message, level='Info', email=False, emailSubje
         if(os.environ['ADUB_DBServer'].lower() != PRODUCTION_DB_SERVER.lower()):
             emailSubject = 'TEST ' + emailSubject
             
-        analyticsEmail.sendEmail(level, emailSubject, message, emailTable)
+        try:
+            analyticsEmail.sendEmail(level, emailSubject, message, emailTable)
+        except Exception as e:
+            logMessage = "{:<8}".format('Error') + " | " + 'Log' + "." + "{:<50s}".format('Log') + " | " + str(e)
+            logging.error(logMessage)
 
     return logMessage
 
@@ -58,7 +62,11 @@ def error_email(moduleName, functionName, message):
         if(os.environ['ADUB_DBServer'].lower() != PRODUCTION_DB_SERVER.lower()):
             emailSubject = 'TEST ' + emailSubject
             
-        analyticsEmail.sendEmail("Error", moduleName + '.' + functionName, message)
+        try:
+            analyticsEmail.sendEmail("Error", moduleName + '.' + functionName, message)
+        except Exception as e:
+            logMessage = "{:<8}".format('Error') + " | " + 'Log' + "." + "{:<50s}".format('error_email') + " | " + str(e)
+            logging.error(logMessage)
 
     return logMessage
 

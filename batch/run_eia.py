@@ -1,8 +1,10 @@
-import importers.eiaImporter as eia
+
 import sys
+sys.path.append('..')
 import argparse
 import helpers.dataAccess as dtAccss
 import os
+from service_constants import eiaImporter
 
 # python app.py -w "eia" -s "LON-PC53" -i 714755 -c "C:\Dev\Excel Files\Output\EIA" -b  "C:\Dev\Excel Files\Output\EIA"
 # python app.py -w "eiaSave" -s "LON-PC53" -c "C:\Dev\Excel Files\Output\EIA" -b  "C:\Dev\Excel Files\Output\EIA"
@@ -23,13 +25,9 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
     if(args.type.lower() == 'all'):
-
-        eiaImporter = eia.EiaImporter(args.server, args.database, args.url, args.key, args.tempCSVFilePath, args.bulkInsertFilePath)
         eiaImporter.run(str(args.id))
 
     if(args.type.lower() == 'series'):
-
-        eiaImporter = eia.EiaImporter(args.server, args.database, args.url, args.key, args.tempCSVFilePath, args.bulkInsertFilePath)
         eiaImporter.runSeries(str(args.id))
     
     
