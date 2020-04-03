@@ -121,7 +121,7 @@ class DataAccess(object):
         sql = """
             DECLARE @out int;
             exec @out = [""" + self.database + """].[dbo].[""" + table + """]
-            SELECT @out AS the_output;
+            SELECT @out AS sp_result;
         """
 
         if(params is not None):
