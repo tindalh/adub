@@ -120,7 +120,7 @@ class DataAccess(object):
         """Assumes params is a tuple"""
         sql = """
             DECLARE @out int;
-            exec [""" + self.database + """].[dbo].[""" + table + """]
+            exec @out = [""" + self.database + """].[dbo].[""" + table + """]
             SELECT @out AS the_output;
         """
 
