@@ -130,6 +130,13 @@ class DataAccess(object):
         else:
             self.cursor.execute(sql)
 
+        result = 1
+        sp_result = self.cursor.fetchval() 
+
+        if (sp_result is not None):
+            result = sp_result
+        return result
+
     def loadToCSV(self, sql, file_name, file_path=""):
         rows = self.cursor.execute(sql)
         if(len(file_path) > 0):

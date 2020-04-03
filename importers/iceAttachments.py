@@ -6,6 +6,7 @@ import datetime
 
 from helpers.dataAccess import DataAccess
 from helpers.utils import get_date_from_string, list_to_csv, get_list_from_directory_csv_files
+from helpers.log import error_email
 
 def import_ICE_attachments(file_parts):
     data_access = DataAccess(os.environ['ADUB_DBServer'], 'Price')  
@@ -32,7 +33,9 @@ def import_ICE_attachments(file_parts):
 
             data_access.delete(schema + '.' + db_table_name, **d)
             data_access.bulkInsert(schema + '.' + db_table_name,  output_directory + '\\' + file_name + '.csv', first_row=1)
-            data_access.executeStoredProcedure('sp_load_ice_settlement_prices_current', [curve])
+
+            if(data_access.executeStoredProcedure('sp_load_ice_settlement_prices_current') != 1):
+                error_email(__name__, 'run_daily_prices', f"sp_load_ice_settlement_prices_current has failed.")
 
 
 def get_max_date_imported(data_access, table, curves):

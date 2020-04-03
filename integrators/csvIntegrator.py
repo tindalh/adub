@@ -5,7 +5,7 @@ sys.path.append("..")
 import helpers.dataAccess as dtAccss
 import helpers.csvHelper as csvHelper
 from helpers.utils import get_date_from_string, get_unique_values_for_dataframe_keys
-from helpers.log import log
+from helpers.log import log as basic_log, error_email
 import pandas as pd
 from multiprocessing import Process
 import os
@@ -72,11 +72,12 @@ class CsvIntegrator(object):
             self.__saveToDB__(df, modified_file_name, self.table_name, **kwargs)
             
             if(self.post_op_procedure is not None):
+                # !!!
                 self.__post_op_procedure__(self.post_op_procedure, self.post_op_params)
             
-            log(__name__, '__integrate__', f"{self.name} has completed and {modified_file_name} has been imported", level="Info", email=True, emailSubject=self.name)
+            basic_log(__name__, '__integrate__', f"{self.name} has completed and {modified_file_name} has been imported", level="Info", email=True, emailSubject=self.name)
         except Exception as e:
-            log(__name__, '__integrate__', f"{self.name} has failed for {modified_file_name}: {str(e)}", level="Error", email=True, emailSubject=self.name)
+            basic_log(__name__, '__integrate__', f"{self.name} has failed for {modified_file_name}: {str(e)}", level="Error", email=True, emailSubject=self.name)
 
     def __arrangeColumns__(self, df, table_columns):
         """
@@ -110,6 +111,7 @@ class CsvIntegrator(object):
     def __post_op_procedure__(self, proc_name, params=[]):
         dataAccess = dtAccss.DataAccess(self.server, self.database)
         
-        dataAccess.executeStoredProcedure(proc_name, params)
+        if(dataAccess.executeStoredProcedure(proc_name, params) != 1):
+            error_email(__name__, 'CsvIntegrator', f"{proc_name} has failed.")
 
     

@@ -162,6 +162,11 @@ class DataAccessCase(unittest.TestCase):
               
         self.assertIsNone(self.dataAccess.delete('import.ICE_Settlement_Curve', **dict_keys))
 
+    def test_execute_stored_procedure(self):
+        self.dataAccess.cursor.execute.return_value = None
+        self.dataAccess.cursor.fetchval.return_value = 1
+        self.assertEqual(1, self.dataAccess.executeStoredProcedure('test'))
+
 
 
 class EmailImporterCase(unittest.TestCase):
