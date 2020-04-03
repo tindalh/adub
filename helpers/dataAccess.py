@@ -119,9 +119,7 @@ class DataAccess(object):
     def executeStoredProcedure(self, table, params=None):
         """Assumes params is a tuple"""
         sql = """
-            DECLARE @out int;
-            exec [""" + self.database + """].[dbo].[""" + table + """]
-            SELECT @out AS the_output;
+            exec  [""" + self.database + """].[dbo].[""" + table + """]
         """
 
         if(params is not None):
@@ -130,15 +128,10 @@ class DataAccess(object):
 
         sql = sql[:-1]  
         if(params is not None):
-            self.cursor.execute(sql,params)
+            result = self.cursor.execute(sql,params).fetchval() 
         else:
-            self.cursor.execute(sql)
+            result = self.cursor.execute(sql).fetchval() 
 
-        result = 1
-        sp_result = self.cursor.fetchval() 
-
-        if (sp_result is not None):
-            result = sp_result
         return result
 
     def loadToCSV(self, sql, file_name, file_path=""):
