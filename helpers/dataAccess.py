@@ -118,7 +118,11 @@ class DataAccess(object):
 		
     def executeStoredProcedure(self, table, params=None):
         """Assumes params is a tuple"""
-        sql = 'exec [' + self.database + '].[dbo].[' + table + '] '
+        sql = """
+            DECLARE @out int;
+            exec [""" + self.database + """].[dbo].[""" + table + """]
+            SELECT @out AS the_output;
+        """
 
         if(params is not None):
             for p in params:
