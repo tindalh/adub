@@ -6,7 +6,7 @@ sys.path.append('..')
 from helpers.utils import get_project_root
 from helpers.dataAccess import DataAccess
 from services.priceReturns import generate_returns
-from helpers.log import log as basic_log, error_email
+from helpers.log import log
 
 # Constant
 ROOT_DIR = get_project_root()
@@ -193,34 +193,27 @@ def run_daily_prices():
         elif('desktop' in os.environ['ADUB_DBServer'].lower()):
             env = 'dev'
 
-        basic_log(__name__, 'run_daily_prices', f"Running import of prices in {env}")
+        log(__name__, 'run_daily_prices', f"Running import of prices in {env}")
         
         env_dict = get_env_dict(env)
 
         # get raw data
         bulk_copy(table_names, env_dict)
 
-        basic_log(__name__, 'run_daily_prices', f"Finished bulk copy")
+        log(__name__, 'run_daily_prices', f"Finished bulk copy")
 
         # process prices
         dta_accss = DataAccess(os.environ['ADUB_DBServer'], 'Price')
-
-        if(dta_accss.executeStoredProcedure('sp_load_ice_prices_current') != 1):
-            error_email(__name__, 'run_daily_prices', f"sp_load_ice_prices_current has failed.")
-
-        if(dta_accss.executeStoredProcedure('sp_load_nymex_prices_current') != 1):
-            error_email(__name__, 'run_daily_prices', f"sp_load_nymex_prices_current has failed.")
-        
-        if(dta_accss.executeStoredProcedure('sp_load_platts_prices_current') != 1):
-            error_email(__name__, 'run_daily_prices', f"sp_load_platts_prices_current has failed.")
-
-        basic_log(__name__, 'run_daily_prices', f"Finished stored proc")
+        dta_accss.executeStoredProcedure('sp_load_ice_prices_current')
+        dta_accss.executeStoredProcedure('sp_load_nymex_prices_current')
+        dta_accss.executeStoredProcedure('sp_load_platts_prices_current')
+        log(__name__, 'run_daily_prices', f"Finished stored proc")
 
         generate_returns()
 
-        basic_log(__name__, 'run_daily_prices', f"Finished generating returns")
+        log(__name__, 'run_daily_prices', f"Finished generating returns")
     except Exception as e:
-        basic_log(__name__, 'run_daily_prices', f"Arc Price Importer has failed: {str(e)}", level="Error", email=True, emailSubject='Arc Price Importer')
+        log(__name__, 'run_daily_prices', f"Arc Price Importer has failed: {str(e)}", level="Error", email=True, emailSubject='Arc Price Importer')
 
 
 if(__name__ == "__main__"):
@@ -240,15 +233,8 @@ if(__name__ == "__main__"):
 
     # process prices
     dta_accss = DataAccess(os.environ['ADUB_DBServer'], 'Price')
-
-    if(dta_accss.executeStoredProcedure('sp_load_ice_prices_current') != 1):
-        error_email(__name__, 'run_daily_prices', f"sp_load_ice_prices_current has failed.")
-
-    if(dta_accss.executeStoredProcedure('sp_load_nymex_prices_current') != 1):
-        error_email(__name__, 'run_daily_prices', f"sp_load_nymex_prices_current has failed.")
-    
-    if(dta_accss.executeStoredProcedure('sp_load_platts_prices_current') != 1):
-        error_email(__name__, 'run_daily_prices', f"sp_load_platts_prices_current has failed.")
-        
+    dta_accss.executeStoredProcedure('sp_load_ice_prices_current')
+    dta_accss.executeStoredProcedure('sp_load_nymex_prices_current')
+    dta_accss.executeStoredProcedure('sp_load_platts_prices_current')
 
     generate_returns()
