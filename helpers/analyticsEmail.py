@@ -25,7 +25,7 @@ def sendEmail(type, subject, body, table=""):
     
 
     try:
-        smptServer = smtplib.SMTP('10.20.20.20')
+        smptServer = smtplib.SMTP('slomgmt.arcpet.co.uk')
         smptServer.send_message(message)
         smptServer.quit()
     except Exception as e:
