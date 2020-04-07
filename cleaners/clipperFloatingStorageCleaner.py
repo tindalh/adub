@@ -3,7 +3,14 @@ import pandas as pd
 
 def clean(df, lastUpdate='2000-01-01'):
     dfResult = __arrangeClipperColumns__(df, lastUpdate)
+    dfResult = setUploadDate(df)
     return dfResult 
+
+def setUploadDate(df):
+    
+    df['UploadDate'] = datetime.date.today()
+            
+    return df
 
 def __getDateFromDelta__(self, delta):
     now = datetime.datetime.now()

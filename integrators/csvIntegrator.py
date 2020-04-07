@@ -114,4 +114,3 @@ class CsvIntegrator(object):
         if(dataAccess.executeStoredProcedure(proc_name, params) != 1):
             error_email(__name__, 'CsvIntegrator', f"{proc_name} has failed.")
 
-    

@@ -6,7 +6,6 @@ import sys
 sys.path.append('..')
 import helpers.dataAccess as dtAccss
 import helpers.stringHelper as strngHlpr
-import service_constants
 import json
 from helpers.log import log
 
@@ -290,7 +289,3 @@ class EiaImporter(object):
                 Insert INto EIAcategorySeries (category_id, series_id) Select category_id, series_id from #EIAcategorySeries
             """
         dataAccess.executeRawSQL(sql.format(path))
-
-if(__name__ == '__main__'):
-    
-    service_constants.eiaImporter.runSeries()
