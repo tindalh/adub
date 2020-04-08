@@ -327,4 +327,4 @@ ieaSplitdatIntegrator = csvIntgrtr.CsvIntegrator(
 
 
 if(__name__ == "__main__"):
-    clipperFloatingStorageIntegrator.run('C:\\dev\\targo\\ExcelUpload\\Global Storage Crude Data.csv')
+    ei1630BrentCurve.run()
