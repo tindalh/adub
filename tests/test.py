@@ -35,7 +35,9 @@ from importers.emailImporter import EmailImporter
 from services.excelExtractor import extract_files, _extract_sections, \
     _extract_blocks, _extract_rows, _extract_columns, _get_block_start, \
      _get_block_end, _get_value
-from services.exchangeWrapper import ExchangeWrapper
+from services.exchange import account as exchange_account, get_start_date as exchange_get_start_date, \
+    get_emails as exchange_get_emails, save_email_attachments as exchange_save_email_attachments, \
+        save_attachment as exchange_save_attachment
 from services.priceReturns import *
 from exchangelib import DELEGATE,Configuration, Credentials, Account, FileAttachment, EWSDateTime
 from constants import ANALYTICS_EMAIL_ADDRESS, EXCHANGE_SERVER, TARGO_DB_NAME
@@ -166,9 +168,8 @@ class DataAccessCase(unittest.TestCase):
 
 class EmailImporterCase(unittest.TestCase):
     def setUp(self):
-        self.exchange_wrapper = ExchangeWrapper()
         self.m = Message(
-            account=self.exchange_wrapper.account,
+            account=exchange_account(),
             subject='ICE 1630 SGT Futures curve on 02-Mar-20_20200302',
             body='Oil prices',
             to_recipients=[
@@ -193,13 +194,13 @@ class EmailImporterCase(unittest.TestCase):
 
 
     def test_SGTBrentCrude(self):
-        with mock.patch('services.exchangeWrapper.ExchangeWrapper.get_emails') as mock_get_emails:
-            with mock.patch('helpers.dataAccess.DataAccess.get_max_database_date') as mock_get_max:
-                with mock.patch('helpers.utils.get_list_from_directory_csv_files') as mock_import_from_directory:
-                    mock_get_emails.return_value = [self.m]
-                    mock_get_max.return_value = datetime(2017,1,1,12,0,0)
-                    mock_import_from_directory.return_value = []
-                    self.assertIsNone(eiSGTBrentCrude.run())
+        with mock.patch('helpers.dataAccess.DataAccess.get_max_database_date') as mock_get_max:
+            with mock.patch('helpers.utils.get_list_from_directory_csv_files') as mock_import_from_directory:
+                exchange_get_emails = MagicMock()
+                exchange_get_emails.return_value =  [self.m]
+                mock_get_max.return_value = datetime(2017,1,1,12,0,0)
+                mock_import_from_directory.return_value = []
+                self.assertIsNone(eiSGTBrentCrude.run())
 
 
 class ExcelExtractorCase(unittest.TestCase):
@@ -489,12 +490,11 @@ class ExcelExtractorCase(unittest.TestCase):
         self.assertEqual(_extract_rows(json, check), expect)
 
 
-class ExchangeWrapperCase(unittest.TestCase):
+class ExchangeCase(unittest.TestCase):
     def setUp(self):
-        self.exchangeWrapper = ExchangeWrapper()
 
         self.m = Message(
-            account=self.exchangeWrapper.account,
+            account=exchange_account(),
             subject='Daily motivation',
             body='All bodies are beautiful',
             to_recipients=[
@@ -524,28 +524,28 @@ class ExchangeWrapperCase(unittest.TestCase):
     def test_get_start_date(self):
         
         date = datetime(2000, 1, 1, 12, 1, 30)
-        self.assertEqual(date.year, self.exchangeWrapper.get_start_date(date).year)
+        self.assertEqual(date.year, exchange_get_start_date(exchange_account(), date).year)
 
     def test_get_emails(self):
-        with mock.patch('services.exchangeWrapper.ExchangeWrapper.get_emails') as MockClass:
-            MockClass.return_value = self.m.subject
-            result = self.exchangeWrapper.get_emails('Daily motivation', datetime(2000, 1, 1, 12, 1, 30))
-            self.assertEqual(result, self.m.subject)
+        exchange_get_emails = MagicMock()
+        exchange_get_emails.return_value = self.m.subject
+        result = exchange_get_emails(exchange_account(), 'SGT', datetime(2000, 1, 1, 12, 1, 30))
+        self.assertEqual(result, self.m.subject)
 
     def test_save_email_attachments(self):
-        self.exchangeWrapper.save_email_attachments((self.m,), self.file_path, [])
+        exchange_save_email_attachments((self.m,), self.file_path, [])
         time_delta = datetime.now() - datetime.utcfromtimestamp(os.path.getmtime(os.path.join(self.file_path, 'my_file_20000101.txt')))
         self.assertLess(time_delta.seconds, 100000)
 
     def test_save_attachment(self):
-        self.exchangeWrapper.save_attachment(
+        exchange_save_attachment(
             self.m.attachments[0], self.file_path, datetime(2000, 1, 1, 12, 1, 30), [])
         time_delta = datetime.now() - datetime.utcfromtimestamp(
             os.path.getmtime(os.path.join(self.file_path, 'my_file_20000101.txt')))
         self.assertLess(time_delta.seconds, 100000)
 
     def test_save_attachment_incorrect_directory_options(self):
-        self.exchangeWrapper.save_attachment(
+        exchange_save_attachment(
             self.m.attachments[0], self.file_path, datetime(2000, 1, 1, 12, 1, 30), [])
         time_delta = datetime.now() - datetime.utcfromtimestamp(
             os.path.getmtime(os.path.join(self.file_path, 'my_file_20000101.txt')))
@@ -697,10 +697,8 @@ class LogCase(unittest.TestCase):
 
 class McQuillingCase(unittest.TestCase):
     def setUp(self):
-        self.exchangeWrapper = ExchangeWrapper()
-
         self.m = Message(
-            account=self.exchangeWrapper.account,
+            account=exchange_account(),
             subject='Daily motivation',
             body='All bodies are beautiful',
             to_recipients=[

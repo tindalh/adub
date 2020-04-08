@@ -5,7 +5,7 @@ import re
 import datetime
 import sys
 sys.path.append('..')
-from services.exchangeWrapper import ExchangeWrapper
+from services.exchange import account, save_email_attachments, get_emails
 from helpers.log import log as log
 from helpers.dataAccess import DataAccess
 from helpers.utils import get_date_from_string, load_json, write_to_csv, files_later_than
@@ -33,15 +33,12 @@ class EmailImporter(object):
 
     def run(self):        
         try:
-            
-            exchangeWrapper = ExchangeWrapper()
-                
             data_access = DataAccess(self.database_server, self.database)
-            list_emails = exchangeWrapper.get_emails(
+            list_emails = get_emails(account(),
                 self.email_subject, \
                     self.fn_get_max_saved(data_access, self.table_name, self.file_parts))
 
-            exchangeWrapper.save_email_attachments(list(list_emails), self.file_path, self.file_parts)
+            save_email_attachments(list(list_emails), self.file_path, self.file_parts)
 
             if (self.fn_save is not None):
                 self.fn_save(self.file_parts)
