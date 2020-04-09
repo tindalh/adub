@@ -86,7 +86,7 @@ class Initialiser(object):
 
     def starteiSGTBrentCrudeImportScheduler(self):
         #scheduler = schedule.every(1).minutes.do(eiSGTBrentCrude.run).scheduler
-        scheduler = schedule.every().day.at("20:00").do(eiSGTBrentCrude.run).scheduler
+        scheduler = schedule.every().day.at("20:20").do(eiSGTBrentCrude.run).scheduler
         jobScheduler = jobSchdlr.JobScheduler('ICE SGT Brent Crude Futures Import', scheduler)
         jobScheduler.schedule()  
 
