@@ -328,3 +328,6 @@ ieaSplitdatIntegrator = csvIntgrtr.CsvIntegrator(
 
 if(__name__ == "__main__"):
     ei1630BrentCurve.run()
+    ei1630Oil.run()
+    ei1930LSGasOil.run()
+    eiSGTBrentCrude.run()
