@@ -14,9 +14,6 @@ from helpers.log import error_email
 from cred_secrets import USERNAME, PASSWORD
 from constants import ANALYTICS_EMAIL_ADDRESS, EXCHANGE_SERVER
 
-# Set to something newer than your current version
-ArchiveInbox.supported_from = EXCHANGE_2016
-
 
 def account():
     config = Configuration(
