@@ -36,17 +36,23 @@ def extract_files(file_list, json):
     first, rest = file_list[0], file_list[1:]
 
     wb = xlrd.open_workbook(first)  
-    xl_sheet = wb.sheet_by_name(json["name"])    
-
-    sheet = [xl_sheet.col_values(i, 0, xl_sheet.nrows) for i in range(xl_sheet.ncols)]
-
+    
     asof_date = get_date_from_string(first)
 
     if(asof_date == 20000101):
         log.error(__file__, 'extract_files', "Can't imply asof date from file name")
 
-    return _extract_sections(json["columns"], sheet) + extract_files(rest, json)
+    return _extract_sheets(json, wb) + extract_files(rest, json)
 
+def _extract_sheets(sheet_templates, wb):
+    if(len(sheet_templates) == 0):
+        return []
+    else:
+        first, rest = sheet_templates[0], sheet_templates[1:]
+        xl_sheet = wb.sheet_by_name(first["name"])  
+        sheet = [xl_sheet.col_values(i, 0, xl_sheet.nrows) for i in range(xl_sheet.ncols)]
+
+        return _extract_sections(first["columns"], sheet) + _extract_sheets(rest, wb)
 
 # json list(list(object)) -> list(dict)
 # Consumes a list of templates and extracts the SECTIONS from a SHEET
@@ -72,7 +78,7 @@ def _extract_blocks(block_templates, section):
     first_block, rest_blocks = block_templates[0], block_templates[1:]
 
     block_start = _get_block_start(section, first_block["name"], first_block["y_start"]) 
-    block_end = _get_block_end(section, block_start)
+    block_end = _get_block_end(section, block_start, len(block_templates))
    
     first = _extract_rows(first_block["columns"], [x for ind, x in enumerate(section) if block_start <= ind < block_end])
     rest = [x for ind, x in enumerate(section) if ind > block_end]
@@ -114,14 +120,18 @@ def _get_block_start(rows, name, skip_rows):
         if(len(name) > 0):
             if(str(rows[i][0]).lower().strip() == name.lower().strip()):
                 return i + skip_rows
-    return 0
+    return 0 + skip_rows
 
 
 # list(tuple) int -> int 
 # Consumes a list(ROW) and returns the index of the first row after the start,
 # that's empty or contains unwanted special characters (e.g. *)
-def _get_block_end(rows, start):
+def _get_block_end(rows, start, num_blocks=None):
     #"*" == str(sheet.cell_value(row, section["start"]))[0]
+    if(num_blocks is not None):
+        if(num_blocks == 1):
+            return 140000
+
     for i in range(len(rows)):
         if(i >= start and len(str(rows[i][0])) == 0 or rows[i][0] is None):
             return i
@@ -136,7 +146,10 @@ def _get_block_end(rows, start):
 # - else use column['value']
 def _get_value(values, column, i):
     try:
-       return values[i]
+        if (column["name"] == 'Date'):
+            datestamp = datetime.datetime(*xlrd.xldate_as_tuple(values[i],datemode=0)[0:3])
+            return datestamp.strftime("%Y-%m-%d")
+        return round(values[i],4)
     except:
         if ("value" in column):
             if(column["value"] == 'date'):
@@ -150,3 +163,7 @@ def _get_value(values, column, i):
 
 
 
+if (__name__ == "__main__"):
+    with open("../templates/global.json") as file:
+        data = json.load(file)
+        print(extract_files(["C:/dev/temp/Energy Aspects/ea_runs.xlsx"], data))
