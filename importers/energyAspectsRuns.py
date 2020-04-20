@@ -30,7 +30,7 @@ def import_energy_aspect_runs(file_path):
 
         persist(result, 'EnergyAspects', "EA_Runs", 'RefineryInfo', "import", 'EnergyAspects_Runs', "Uploaded", 0)
 
-        log("Energy Aspects", "import_energy_aspect_runs", "The job has completed")
+        log("Energy Aspects", "import_energy_aspect_runs", "The job has completed", level='Info', email=True, emailSubject="Energy Aspects Runs")
     except Exception as e:
         error_email("Energy Aspects", "import_energy_aspect_runs", str(e) )
 
