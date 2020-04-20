@@ -3,6 +3,7 @@ import services.importWatcher as wtchr
 import services.jobScheduler as jobSchdlr
 from importers.arcPrices import run_daily_prices
 from services.validator import validate
+from importers.energyAspectsRuns import import_energy_aspect_runs
 import datetime
 import logging
 import copy
@@ -36,6 +37,13 @@ class Initialiser(object):
 
     def startRystadWatcher(self):
         wtchr.watch('Rystad Production', rystadIntegrator)
+
+    def start_energyAspectsRuns(self):
+        wtchr.watch(
+            'Energy Aspects Runs', 
+            fn=import_energy_aspect_runs, 
+            file_path="{}\\EnergyAspects".format(os.environ['ADUB_Import_Path'])
+        )
 
     def startMcQuillingWatcher(self):
         wtchr.watch('McQuilling Assessments', mcQuillingIntegrator)

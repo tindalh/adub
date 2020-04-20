@@ -330,16 +330,17 @@ class ExcelExtractorCase(unittest.TestCase):
             'data\\test_excel_extractor.xlsx'
         ]
         
-        json = {
-            "name":"one column one block",
-            "columns":[self.section1]
-        }
+        json =  [
+            {
+                "name":"one column one block",
+                "columns":[self.section1]
+            }
+        ]
 
         expect = [
             {
                 'name':self.block1["name"],
                 'rows':[
-                    {'column 1': 1.0, 'column 2': 'a'}, 
                     {'column 1': 2.0, 'column 2': 'b'}, 
                     {'column 1': 3.0, 'column 2': 'c'}, 
                     {'column 1': 4.0, 'column 2': 'd'}, 
@@ -350,7 +351,6 @@ class ExcelExtractorCase(unittest.TestCase):
                 ]
             }
         ]
-        
         self.assertEqual(extract_files(file_list, json), expect)
 
     def test_get_block_start(self):

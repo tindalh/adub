@@ -16,4 +16,5 @@ if __name__ == '__main__':
     initialiser.startei1630OilImportScheduler()
     initialiser.startei1930LSGasOilImportScheduler()
     initialiser.starteiSGTBrentCrudeImportScheduler()
+    initialiser.start_energyAspectsRuns()
 

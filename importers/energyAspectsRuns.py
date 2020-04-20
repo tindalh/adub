@@ -8,13 +8,13 @@ import json
 import datetime
 
 from helpers.dataAccess import DataAccess
-from helpers.utils import list_to_csv
+from helpers.utils import list_to_csv, get_project_root
 from helpers.log import error_email, log
 
 def import_energy_aspect_runs(file_path):
     try:
         d = None
-        with open("../templates/global.json") as file:
+        with open(os.path.join(get_project_root(), "templates/global.json")) as file:
             data = json.load(file)
             d = extract_files([file_path], data)
             

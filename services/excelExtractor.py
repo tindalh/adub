@@ -149,7 +149,10 @@ def _get_value(values, column, i):
         if (column["name"] == 'Date'):
             datestamp = datetime.datetime(*xlrd.xldate_as_tuple(values[i],datemode=0)[0:3])
             return datestamp.strftime("%Y-%m-%d")
-        return round(values[i],4)
+        try:
+            return round(values[i],4)
+        except:
+            return values[i]
     except:
         if ("value" in column):
             if(column["value"] == 'date'):

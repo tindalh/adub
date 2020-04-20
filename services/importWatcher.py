@@ -8,12 +8,15 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from helpers.log import info, error_email
 
-def watch(name, importer):  
+def watch(name, importer=None, fn=None, file_path=None, file_name=None):  
     """
         Entry point for this module
     """ 
-    
-    process = Process(target=__startDirectoryWatch__, args=(name, importer.run, importer.file_path, importer.file_name))
+    if(importer is not None):
+        process = Process(target=__startDirectoryWatch__, args=(name, importer.run, importer.file_path, importer.file_name))
+    else:
+        process = Process(target=__startDirectoryWatch__, args=(name, fn, file_path, file_name))
+
     process.start() 
 
 def __startDirectoryWatch__(name, importerFunc, file_path, file_name = None):
