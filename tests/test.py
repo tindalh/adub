@@ -31,7 +31,6 @@ from helpers.dataAccess import DataAccess
 from helpers.log import log as old_log
 import helpers.log as log
 from helpers.utils import *
-from importers.emailImporter import EmailImporter
 from services.excelExtractor import extract_files, _extract_sections, \
     _extract_blocks, _extract_rows, _extract_columns, _get_block_start, \
      _get_block_end, _get_value
@@ -163,44 +162,6 @@ class DataAccessCase(unittest.TestCase):
         dict_keys = get_unique_values_for_dataframe_keys(df, ['asof', 'curve'])        
               
         self.assertIsNone(self.dataAccess.delete('import.ICE_Settlement_Curve', **dict_keys))
-
-
-
-class EmailImporterCase(unittest.TestCase):
-    def setUp(self):
-        self.m = Message(
-            account=exchange_account(),
-            subject='ICE 1630 SGT Futures curve on 02-Mar-20_20200302',
-            body='Oil prices',
-            to_recipients=[
-                Mailbox(email_address='anne@example.com')
-            ],
-            datetime_received=datetime(2000, 1, 1, 12, 1, 30),
-        )
-        binary_file_content = 'Hello from unicode æøå'.encode('utf-8')  # Or read from file, BytesIO etc.
-
-        a = FileAttachment(
-            name='ICE 1630 SGT Brent Crude Futures curve on 02-Mar-20.csv',
-            content=binary_file_content
-        )
-
-        self.m.attach(a)
-
-        self.server = 'is mocked'
-        self.database = 'is mocked'
-        self.dataAccess = DataAccess('any', 'thing', is_unit_test=True)
-        self.dataAccess.cursor = MagicMock()
-        self.dataAccess.cursor.execute().fetchval.return_value = datetime.strftime(datetime(2000,1,1,12,0,0), '%Y-%m-%d')
-
-
-    def test_SGTBrentCrude(self):
-        with mock.patch('helpers.dataAccess.DataAccess.get_max_database_date') as mock_get_max:
-            with mock.patch('helpers.utils.get_list_from_directory_csv_files') as mock_import_from_directory:
-                exchange_get_emails = MagicMock()
-                exchange_get_emails.return_value =  [self.m]
-                mock_get_max.return_value = datetime(2017,1,1,12,0,0)
-                mock_import_from_directory.return_value = []
-                self.assertIsNone(eiSGTBrentCrude.run())
 
 
 class ExcelExtractorCase(unittest.TestCase):

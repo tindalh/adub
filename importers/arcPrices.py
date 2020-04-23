@@ -7,6 +7,7 @@ from helpers.utils import get_project_root
 from helpers.dataAccess import DataAccess
 from services.priceReturns import generate_returns
 from helpers.log import log
+from constants import PRICE_DB_NAME
 
 # Constant
 ROOT_DIR = get_project_root()
@@ -232,7 +233,7 @@ if(__name__ == "__main__"):
     bulk_copy(table_names, env_dict)
 
     # process prices
-    dta_accss = DataAccess(os.environ['ADUB_DBServer'], 'Price')
+    dta_accss = DataAccess(os.environ['ADUB_DBServer'], PRICE_DB_NAME)
     dta_accss.executeStoredProcedure('sp_load_ice_prices_current')
     dta_accss.executeStoredProcedure('sp_load_nymex_prices_current')
     dta_accss.executeStoredProcedure('sp_load_platts_prices_current')
