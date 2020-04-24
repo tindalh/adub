@@ -1,4 +1,1 @@
-cd ..
-cd ..
-cd env\scripts
-activate.bat & cd .. & cd .. & cd adub & cd services & python validator.py
+%ADUB_APP%\env\scripts\activate.bat & cd %ADUB_APP%\adub\services & python validator.py

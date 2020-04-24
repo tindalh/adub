@@ -1,4 +1,1 @@
-cd ..
-cd ..
-cd env\scripts
-activate.bat & cd .. & cd .. & cd adub & cd services & python emailImporter.py --job 1 
+%ADUB_APP%\env\scripts\activate.bat & cd %ADUB_APP%\adub\services & python emailImporter.py --job 1

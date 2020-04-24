@@ -2,10 +2,7 @@
 IF %1.==. GOTO No1
 IF %2.==. GOTO No2
 
-cd ..
-cd ..
-cd env\scripts
-activate.bat & cd .. & cd .. & cd adub & cd importers & python arcPrices.py --env %1 --data %2
+%ADUB_APP%\env\scripts\activate.bat & cd %ADUB_APP%\adub\importers & python arcPrices.py --env %1 --data %2
 GOTO End
 
 :No1
@@ -18,4 +15,5 @@ GOTO Error
 :End
 exit 0
 :Error
+pause
 exit 1

@@ -171,14 +171,18 @@ def sort_expiries(loe, reverse=False): # stub
 def sort_expiries(loe, reverse=False): # stub
     return sorted(loe, key=lambda k: k.Contract, reverse=reverse)
 
-def generate_returns():
+def generate_returns(all=False):
     dtAccss = DataAccess(os.environ['ADUB_DBServer'], 'Price')
 
     traded_instruments =  dtAccss.load('view_TradedInstruments')
 
     for i in traded_instruments:  
         returns_filter = {'IdInstrument': [i.Id]}
-        most_recent_returns = dtAccss.get_max_database_date('view_Returns', 'Asof', 'dbo', **returns_filter)
+
+        if(all==False):
+            most_recent_returns = dtAccss.get_max_database_date('view_Returns', 'Asof', 'dbo', **returns_filter)
+        else:
+            most_recent_returns = datetime(2000,1,1)
 
         quotes_filter = {'IdInstrument': i.Id, '>=Asof': datetime.strftime(most_recent_returns, "%Y-%m-%d")} 
         quotes = dtAccss.load('view_Quotes_Futures', **quotes_filter)
@@ -207,7 +211,7 @@ def generate_returns():
 
 
 if(__name__ == "__main__"):
-    generate_returns()
+    generate_returns(all=True)
 
 
 

@@ -1,0 +1,1 @@
+%ADUB_APP%\env\scripts\activate.bat & cd %ADUB_APP%\adub\services & python priceReturns.py 
