@@ -1,5 +1,6 @@
 import services.importWatcher as wtchr
 from importers.energyAspectsRuns import import_energy_aspect_runs
+from importers.fge_runs import import_fge_runs
 from service_constants import *
 
 if __name__ == '__main__':
@@ -9,6 +10,12 @@ if __name__ == '__main__':
         'Energy Aspects Runs', 
         fn=import_energy_aspect_runs, 
         file_path="{}\\EnergyAspects".format(os.environ['ADUB_Import_Path'])
+    )
+
+    wtchr.watch(
+        'FGE Runs', 
+        fn=import_fge_runs, 
+        file_path="{}\\FGE".format(os.environ['ADUB_Import_Path'])
     )
 
     wtchr.watch('McQuilling Assessments', mcQuillingIntegrator)

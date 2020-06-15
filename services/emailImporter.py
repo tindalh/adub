@@ -8,11 +8,29 @@ from helpers.dataAccess import DataAccess
 from constants import PRICE_DB_NAME
 from importers.iceAttachments import get_max_date_imported, import_ICE_attachments
 
-def import_email(email_subject, file_path, data_access, name, table_name, file_parts, fn_get_max_saved, fn_save=None):        
+def import_email(
+        email_subject, 
+        file_path, 
+        data_access, 
+        name, 
+        table_name, 
+        file_parts, 
+        fn_get_max_saved=None, 
+        schema_name=None,
+        date_column_name=None,
+        fn_save=None
+    ):        
     try:
-        list_emails = get_emails(account(),
-            email_subject, \
-                fn_get_max_saved(data_access, table_name, file_parts))
+        if(fn_get_max_saved is not None):
+            max_saved = fn_get_max_saved(data_access, table_name, file_parts)
+        else:
+            max_saved = data_access.get_max_database_date(table_name, date_column_name, schema_name)
+
+        list_emails = get_emails(
+            account(),
+            email_subject, 
+            max_saved
+        )
 
         save_email_attachments(list(list_emails), file_path, file_parts)
 
@@ -26,7 +44,12 @@ def import_email(email_subject, file_path, data_access, name, table_name, file_p
 if(__name__ == "__main__"):
     parser = argparse.ArgumentParser(description='Import email attachments')
 
-    parser.add_argument('--job', help='The id of the job - {\n\t1: "ICE Settlement Curves"\n}', required=True)
+    parser.add_argument(
+        '--job', 
+        help='The id of the job - {\n\t1: "ICE Settlement Curves"\n\
+                                    \n\t2: "McQuilling Assessments"\n}', 
+        required=True)
+
     args = parser.parse_args()
 
     if(args.job == '1'):
@@ -47,4 +70,16 @@ if(__name__ == "__main__"):
                 file_parts=i[1],
                 fn_save = import_ICE_attachments,
                 fn_get_max_saved = get_max_date_imported
+            )
+        
+    elif(args.job == '2'):
+        import_email(
+                email_subject='Daily Freight Rate Assessment', 
+                file_path=os.path.join(os.environ["ADUB_Import_Path"], "McQuilling\\Attachments"),
+                data_access=DataAccess(os.environ["ADUB_DBServer"], PRICE_DB_NAME),
+                name='McQuilling Daily Freight Rate Assessment',
+                table_name = 'McQuilling',
+                file_parts=['Daily Freight Rate Assessment'],
+                schema_name='import',
+                date_column_name='Datestamp'
             )

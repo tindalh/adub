@@ -1,4 +1,4 @@
-from exchangelib import DELEGATE, NTLM, Configuration, Credentials, Account, FileAttachment, EWSDateTime
+from services.exchange import account, save_email_attachments, get_emails
 import os
 import re
 import datetime
@@ -78,7 +78,6 @@ class McQuilling(object):
 
     def get_emails(self, max_existing, email_subject, account):
         start = self.get_start_date(max_existing, account)
-
         return account.inbox.filter(subject__contains=email_subject).filter(datetime_received__gt=start).order_by('-datetime_received')[:100]
 
     # ListOfEmails -> None
@@ -93,13 +92,14 @@ class McQuilling(object):
 
             for attachment in first.attachments:
                 if isinstance(attachment, FileAttachment):
+                    if("assessment" in attachment.name.lower()):
 
-                    full_file_path = os.path.join(
+                        full_file_path = os.path.join(
                         file_path, f"{attachment.name.split('.')[0]}_{first.datetime_received.strftime('%Y%m%d')}.xlsm")
 
-                    with open(full_file_path, 'wb') as f:
-                        f.write(attachment.content)
-                        print('Saved attachment to', full_file_path)
+                        with open(full_file_path, 'wb') as f:
+                            f.write(attachment.content)
+                            print('Saved attachment to', full_file_path)
 
             self.get_attachments(rest, file_path)
 
@@ -122,8 +122,6 @@ class McQuilling(object):
         log(__name__, 'run', "Extracting from " + os.path.join(self.file_path,"Attachments"))
 
         list_dicts = []
-
-        
 
         for filename in file_list:
             try:

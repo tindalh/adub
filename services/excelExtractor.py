@@ -57,10 +57,10 @@ def _extract_sheets(sheet_templates, wb):
 # json list(list(object)) -> list(dict)
 # Consumes a list of templates and extracts the SECTIONS from a SHEET
 def _extract_sections(section_templates, sheet):
-    if(len(sheet) == 0):
+    if(len(sheet) == 0 or section_templates is None):
         return []
 
-    first_section_template, rest_section_templates = section_templates[0], section_templates[1:]
+    first_section_template, rest_section_templates = section_templates[0], None if len(section_templates) == 1 else section_templates[1:]
     first_section = [series for ind, series in enumerate(sheet) if ind < first_section_template["end"]]
     rest_sections = [series for ind, series in enumerate(sheet) if ind > first_section_template["end"]]
 
@@ -91,7 +91,7 @@ def _extract_blocks(block_templates, section):
 
 
 # json list(tuple) -> list(ROW)
-# Consume a list of templates and extractts the ROWS from a BLOCK
+# Consume a list of templates and extracts the ROWS from a BLOCK
 def _extract_rows(column_templates, block):
     if(len(block) == 0):
         return []
@@ -103,12 +103,12 @@ def _extract_rows(column_templates, block):
   
 
 # json tuple -> COLUMNS
-# Consume a list of templates and extractts the COLUMNS from a ROW
+# Consume a list of templates and extracts the COLUMNS from a ROW
 def _extract_columns(row_template, row):
     d = {}
     for i in range(len(row_template)) :
         if(row_template[i]["name"] != 'ignore'):
-            d[row_template[i]["name"]] = _get_value(row, row_template[i], i)
+           d[row_template[i]["name"]] = _get_value(row, row_template[i], i)
 
     return d    
 
@@ -159,9 +159,6 @@ def _get_value(values, column, i):
                 return datetime.date.today().strftime("%d-%m-%Y")
             else:
                 return column["value"]
-
-    # row_dict[config_column["ours"]] = re.sub("([0-9])(?:m)", r'\1', sheet.cell_value(row, x).replace('*',''))  # TODO - this only works for McQuilling
-
 
 
 
