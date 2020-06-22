@@ -60,7 +60,9 @@ def error_email(moduleName, functionName, message):
 
     if(INTERNAL_DOMAIN.lower() in os.environ["userdomain"].lower() ):
         if(os.environ['ADUB_DBServer'].lower() != PRODUCTION_DB_SERVER.lower()):
-            emailSubject = 'TEST ' + emailSubject
+            emailSubject = 'TEST ' + moduleName + '.' + functionName
+        else:
+            emailSubject = moduleName + '.' + functionName
             
         try:
             analyticsEmail.sendEmail("Error", moduleName + '.' + functionName, message)
