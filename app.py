@@ -1,6 +1,9 @@
 import services.importWatcher as wtchr
 from importers.energyAspectsRuns import import_energy_aspect_runs
 from importers.fge_runs import import_fge_runs
+from importers.refinitiv_afra_floating_storage import import_refinitiv_afra_storage
+from importers.refinitiv_suezmax_floating_storage import import_refinitiv_suezmax_storage
+from importers.refinitiv_vlcc_floating_storage import import_refinitiv_vlcc_storage
 from service_constants import *
 
 if __name__ == '__main__':
@@ -16,6 +19,24 @@ if __name__ == '__main__':
         'FGE Runs', 
         fn=import_fge_runs, 
         file_path="{}\\FGE".format(os.environ['ADUB_Import_Path'])
+    )
+
+    wtchr.watch(
+        'Refinitiv Aframax', 
+        fn=import_refinitiv_afra_storage, 
+        file_path="{}\\Refinitiv\\Aframax".format(os.environ['ADUB_Import_Path'])
+    )
+
+    wtchr.watch(
+        'Refinitiv Suezmax', 
+        fn=import_refinitiv_suezmax_storage, 
+        file_path="{}\\Refinitiv\\Suezmax".format(os.environ['ADUB_Import_Path'])
+    )
+
+    wtchr.watch(
+        'Refinitiv VLCC', 
+        fn=import_refinitiv_vlcc_storage, 
+        file_path="{}\\Refinitiv\\VLCC".format(os.environ['ADUB_Import_Path'])
     )
 
     wtchr.watch('McQuilling Assessments', mcQuillingIntegrator)

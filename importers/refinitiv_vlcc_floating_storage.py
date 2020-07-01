@@ -11,10 +11,10 @@ from helpers.dataAccess import DataAccess
 from helpers.utils import list_to_csv, get_project_root
 from helpers.log import error_email, log
 
-def import_fge_runs(file_path):
+def import_refinitiv_vlcc_storage(file_path):
     try:
         d = None
-        with open(os.path.join(get_project_root(), "templates/refinitive_floating_storage.json")) as file:
+        with open(os.path.join(get_project_root(), "templates/refinitive_vlcc.json")) as file:
             data = json.load(file)
             d = extract_files([file_path], data)
             
@@ -76,6 +76,6 @@ def get_max_date_imported(data_access, table, curves):
     return max_database_date
 
 if(__name__ == "__main__"):
-    import_fge_runs("C:/dev/Excel Files/Refinitiv/VLCC/Crude Oil (VLCC) Floating Storage- 20200612 (beta).xlsx")
+    import_refinitiv_vlcc_storage("C:/dev/temp/Crude Oil (VLCC) Floating Storage- 20200626 (beta) [2].xlsx")
 
     
