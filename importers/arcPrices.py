@@ -102,7 +102,7 @@ def bulk_copy(table_names, env_dict):
     
     try:
         data_access = DataAccess(env_dict["source_server"], env_dict["source_db_schema"].split('.')[0])
-        kwas = {'Job_Name':'JOB_LDS_MFL_MARKET_FILE_LOAD', 'Load_Date':datetime.today.date(), 'Load_Status':'Finished'} 
+        kwas = {'Job_Name':'JOB_LDS_MFL_MARKET_FILE_LOAD', 'Load_Date': datetime.strftime(datetime.today().date(), '%Y-%m-%d'), 'Load_Status':'Finished'} 
         
         while(not data_access.load('VIEW_VLDN_MFL_DI_CTRL',**kwas)):
             log(__name__, 'bulk_copy', f"Waiting for Jon's job to finish")
@@ -110,7 +110,7 @@ def bulk_copy(table_names, env_dict):
 
         log(__name__, 'bulk_copy', f"Prices available - loading...")
     except Exception as e:
-        log(__name__, 'bulk_copy', f"Arc Price Importer has failed: {str(e)}", level="Error", email=True, emailSubject='Arc Price Importer')
+        log(__name__, 'bulk_copy', f"Arc Price Importer error polling import job: {str(e)}", level="Error", email=True, emailSubject='Arc Price Importer')
         
     
     for table in table_names:
