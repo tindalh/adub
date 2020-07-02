@@ -1,4 +1,6 @@
+from datetime import datetime
 import subprocess
+import time
 import sys
 import os
 import argparse
@@ -96,6 +98,20 @@ def bulk_copy(table_names, env_dict):
         'Target server: ' + env_dict["target_server"] + \
         '\nSource Server: ' + env_dict["source_server"] + \
         '\nFile path: ' + env_dict["file_path"])
+
+    
+    try:
+        data_access = DataAccess(env_dict["source_server"], env_dict["source_db_schema"].split('.')[0])
+        kwas = {'Job_Name':'JOB_LDS_MFL_MARKET_FILE_LOAD', 'Load_Date':datetime.today.date(), 'Load_Status':'Finished'} 
+        
+        while(not data_access.load('VIEW_VLDN_MFL_DI_CTRL',**kwas)):
+            log(__name__, 'bulk_copy', f"Waiting for Jon's job to finish")
+            time.sleep(30)
+
+        log(__name__, 'bulk_copy', f"Prices available - loading...")
+    except Exception as e:
+        log(__name__, 'bulk_copy', f"Arc Price Importer has failed: {str(e)}", level="Error", email=True, emailSubject='Arc Price Importer')
+        
     
     for table in table_names:
         source_table_name = table["Source"]
