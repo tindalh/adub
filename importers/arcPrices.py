@@ -102,7 +102,7 @@ def bulk_copy(table_names, env_dict):
     
     try:
         data_access = DataAccess(env_dict["source_server"], env_dict["source_db_schema"].split('.')[0])
-        kwas = {'Job_Name':'JOB_LDS_MFL_MARKET_FILE_LOAD', 'Load_Date': datetime(datetime.today().year, datetime.today().month, datetime.today().day).date(), 'Load_Status':'Finished'} 
+        kwas = {'Job_Name':'JOB_LDS_MFL_MARKET_FILE_LOAD', 'Load_Date': datetime(datetime.today().year, datetime.today().month, datetime.today().day), 'Load_Status':'Finished'} 
         
         while(not data_access.load('VIEW_VLDN_MFL_DI_CTRL',**kwas)):
             log(__name__, 'bulk_copy', f"Waiting for Jon's job to finish")
